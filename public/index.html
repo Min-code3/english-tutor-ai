@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI English Tutor 💬</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green:  #25d366;
+    --teal:   #075e54;
+    --teal2:  #128c7e;
+    --bg:     #ece5dd;
+    --white:  #ffffff;
+    --gray:   #f0f0f0;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── header ── */
+  header {
+    background: var(--teal);
+    color: #fff;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.3);
+    flex-shrink: 0;
+    position: relative;
+  }
+  header .avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--teal2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  header h1 { font-size: 16px; font-weight: 700; }
+  header p  { font-size: 12px; opacity: .8; }
+  header .settings-btn {
+    margin-left: auto;
+    background: none; border: none; cursor: pointer;
+    font-size: 22px; color: #fff;
+  }
+
+  /* ── settings drawer ── */
+  #drawer {
+    position: fixed; top: 0; right: -320px;
+    width: 300px; height: 100%; background: var(--teal);
+    color: #fff; padding: 20px 16px;
+    transition: right .3s ease;
+    z-index: 100;
+    overflow-y: auto;
+    box-shadow: -2px 0 12px rgba(0,0,0,.3);
+  }
+  #drawer.open { right: 0; }
+  #drawer h2 { font-size: 16px; margin-bottom: 14px; }
+  #drawer label { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 4px; }
+  #drawer select, #drawer textarea, #drawer input[type=password] {
+    width: 100%; border-radius: 8px; border: 1px solid rgba(255,255,255,.3);
+    background: rgba(255,255,255,.12); color: #fff;
+    padding: 8px 10px; font-size: 14px;
+  }
+  #drawer select option { color: #111; background: #fff; }
+  #drawer button.primary {
+    width: 100%; margin-top: 18px;
+    background: #25d366; border: none; border-radius: 24px;
+    color: #fff; font-size: 14px; font-weight: 700;
+    padding: 10px; cursor: pointer;
+  }
+  #drawer .close-btn {
+    float: right; background: none; border: none;
+    color: #fff; font-size: 20px; cursor: pointer;
+  }
+  #overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.4); z-index: 99;
+  }
+  #overlay.open { display: block; }
+
+  /* ── chat area ── */
+  #chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 10px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scroll-behavior: smooth;
+  }
+
+  /* ── bubbles ── */
+  .bubble-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  .bubble-row.user   { flex-direction: row-reverse; }
+  .bubble-row.bot    { flex-direction: row; }
+
+  .bubble-row .ava {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--teal2); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+  }
+
+  .bubble {
+    padding: 10px 14px;
+    border-radius: 18px;
+    max-width: min(75%, 560px);
+    font-size: 15px;
+    line-height: 1.6;
+    word-break: break-word;
+    box-shadow: 0 1px 2px rgba(0,0,0,.12);
+  }
+  .bubble.user {
+    background: #dcf8c6;
+    border-bottom-right-radius: 4px;
+  }
+  .bubble.bot {
+    background: var(--white);
+    border-bottom-left-radius: 4px;
+  }
+
+  /* ── section boxes ── */
+  .sec {
+    border-radius: 8px; padding: 12px 14px; margin: 8px 0;
+    font-size: 14px; line-height: 1.6;
+  }
+  .sec-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; margin-bottom: 8px;
+  }
+  .sec-feedback  { background: #fffbeb; border-left: 4px solid #f59e0b; }
+  .sec-feedback  .sec-title { color: #92400e; }
+  .sec-corrected { background: #f0fdf4; border-left: 4px solid #22c55e; }
+  .sec-corrected .sec-title { color: #166534; }
+  .sec-chat      { background: #eff6ff; border-left: 4px solid #3b82f6; }
+  .sec-chat      .sec-title { color: #1e40af; }
+  .sec-korean    { background: #fdf4ff; border-left: 4px solid #a855f7; }
+  .sec-korean    .sec-title { color: #6b21a8; }
+
+  .sec blockquote {
+    border-left: 3px solid #22c55e; background: #dcfce7;
+    margin: 6px 0; padding: 8px 12px; border-radius: 4px;
+    font-weight: 600; font-style: normal;
+  }
+  .sec p  { margin: .25rem 0; }
+  .sec ul { margin: .25rem 0 .25rem 1.2rem; }
+  .sec strong { font-weight: 700; }
+
+  /* ── typing indicator ── */
+  .typing span {
+    display: inline-block; width: 8px; height: 8px;
+    border-radius: 50%; background: #aaa; margin: 0 2px;
+    animation: blink 1.2s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: .2s; }
+  .typing span:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink {
+    0%, 80%, 100% { opacity: .2; transform: scale(.8); }
+    40%           { opacity: 1;  transform: scale(1);  }
+  }
+
+  /* ── input bar ── */
+  #input-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 8px 10px 12px;
+    background: var(--bg);
+    flex-shrink: 0;
+  }
+  #msg-input {
+    flex: 1; resize: none; max-height: 120px; overflow-y: auto;
+    border-radius: 24px; border: none;
+    background: #fff; padding: 10px 16px;
+    font-size: 15px; outline: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,.1);
+    font-family: inherit;
+    line-height: 1.5;
+  }
+  #send-btn {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: var(--teal2); border: none; cursor: pointer;
+    color: #fff; font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background .2s;
+  }
+  #send-btn:hover { background: var(--teal); }
+  #send-btn:disabled { background: #aaa; cursor: default; }
+
+  /* ── welcome ── */
+  .welcome {
+    text-align: center; color: #555; padding: 24px 16px;
+    font-size: 14px; line-height: 1.7;
+  }
+  .welcome .emoji { font-size: 48px; display: block; margin-bottom: 8px; }
+
+  /* ── mobile ── */
+  @media (max-width: 480px) {
+    .bubble { max-width: 88%; }
+    #drawer { width: 100%; right: -100%; }
+    #drawer.open { right: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Settings overlay -->
+<div id="overlay" onclick="closeDrawer()"></div>
+
+<!-- Settings drawer -->
+<div id="drawer">
+  <button class="close-btn" onclick="closeDrawer()">✕</button>
+  <h2>⚙️ 설정</h2>
+
+  <label>📊 영어 레벨</label>
+  <select id="sel-level">
+    <option>Beginner</option>
+    <option>Elementary</option>
+    <option selected>Intermediate</option>
+    <option>Upper-Intermediate</option>
+    <option>Advanced</option>
+  </select>
+
+  <label>💡 관심사 / 주제</label>
+  <textarea id="txt-interests" rows="3" placeholder="예: K-pop, 여행, 음식, 영화…">daily life, travel, food</textarea>
+
+  <label>🤖 AI 모델</label>
+  <select id="sel-model">
+    <option value="gpt-4o-mini">gpt-4o-mini (빠름 · 저렴 ⚡)</option>
+    <option value="gpt-4o">gpt-4o (고품질 ✨)</option>
+  </select>
+
+  <label>🔑 OpenAI API Key <small>(선택)</small></label>
+  <input type="password" id="txt-apikey" placeholder="sk-…" />
+
+  <button class="primary" onclick="newChat()">🔄 새 대화 시작</button>
+</div>
+
+<!-- App header -->
+<header>
+  <div class="avatar">🎓</div>
+  <div>
+    <h1>AI English Tutor</h1>
+    <p id="header-sub">Intermediate · daily life, travel, food</p>
+  </div>
+  <button class="settings-btn" onclick="openDrawer()">☰</button>
+</header>
+
+<!-- Chat messages -->
+<div id="chat">
+  <div class="welcome">
+    <span class="emoji">👋</span>
+    <strong>안녕하세요! AI 영어 튜터예요.</strong><br/>
+    영어로 말을 걸어주세요. 틀려도 괜찮아요!<br/>
+    한국어로 쓰면 영어로 어떻게 말하는지 알려드려요. 😊
+  </div>
+</div>
+
+<!-- Input bar -->
+<div id="input-bar">
+  <textarea id="msg-input" rows="1" placeholder="영어로 말해보세요! (한국어도 OK 👍)"
+            oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+  <button id="send-btn" onclick="sendMessage()">➤</button>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let messages = [];  // full history for display; sliding window sent to API
+
+// ── Drawer ────────────────────────────────────────────────────────────────────
+function openDrawer() {
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+  updateHeaderSub();
+}
+function updateHeaderSub() {
+  const level     = document.getElementById('sel-level').value;
+  const interests = document.getElementById('txt-interests').value || 'general';
+  document.getElementById('header-sub').textContent = `${level} · ${interests.substring(0, 30)}`;
+}
+
+// ── New chat ──────────────────────────────────────────────────────────────────
+function newChat() {
+  messages = [];
+  const chat = document.getElementById('chat');
+  chat.innerHTML = `
+    <div class="welcome">
+      <span class="emoji">🔄</span>
+      <strong>새 대화를 시작했어요!</strong><br/>
+      영어로 말을 걸어주세요. 😊
+    </div>`;
+  closeDrawer();
+}
+
+// ── Auto-resize textarea ─────────────────────────────────────────────────────
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+// ── Key handler ──────────────────────────────────────────────────────────────
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+// ── Markdown section renderer ─────────────────────────────────────────────────
+function renderAI(content) {
+  // Korean mode
+  const koRe = /##\s*🌏[^\n]*\n([\s\S]*?)$/i;
+  const koM  = content.match(koRe);
+  if (koM) {
+    return `<div class="sec sec-korean">
+      <div class="sec-title">🌏 영어로 이렇게 말해요!</div>
+      ${marked.parse(koM[1].trim())}
+    </div>`;
+  }
+
+  const s1Re = /##\s*✏️?\s*Step\s*1[^\n]*\n([\s\S]*?)(?=##\s*💯?\s*Step\s*2|$)/i;
+  const s2Re = /##\s*💯?\s*Step\s*2[^\n]*\n([\s\S]*?)(?=##\s*💬?\s*Step\s*3|$)/i;
+  const s3Re = /##\s*💬?\s*Step\s*3[^\n]*([\s\S]*?)$/i;
+
+  const m1 = content.match(s1Re);
+  const m2 = content.match(s2Re);
+  const m3 = content.match(s3Re);
+
+  if (m1 && m2 && m3) {
+    return `
+      <div class="sec sec-feedback">
+        <div class="sec-title">✏️ 문장 교정 &amp; 피드백</div>
+        ${marked.parse(m1[1].trim())}
+      </div>
+      <div class="sec sec-corrected">
+        <div class="sec-title">💯 교정된 전체 문장</div>
+        ${marked.parse(m2[1].trim())}
+      </div>
+      <div class="sec sec-chat">
+        <div class="sec-title">💬 대화 이어가기</div>
+        ${marked.parse(m3[1].trim())}
+      </div>`;
+  }
+
+  // Fallback
+  return marked.parse(content);
+}
+
+// ── Append bubble ─────────────────────────────────────────────────────────────
+function appendBubble(role, htmlContent, isHtml = false) {
+  const chat  = document.getElementById('chat');
+  const row   = document.createElement('div');
+  row.className = `bubble-row ${role === 'user' ? 'user' : 'bot'}`;
+
+  if (role !== 'user') {
+    const ava = document.createElement('div');
+    ava.className = 'ava'; ava.textContent = '🎓';
+    row.appendChild(ava);
+  }
+
+  const bubble = document.createElement('div');
+  bubble.className = `bubble ${role === 'user' ? 'user' : 'bot'}`;
+  if (isHtml) {
+    bubble.innerHTML = htmlContent;
+  } else {
+    bubble.textContent = htmlContent;
+  }
+
+  row.appendChild(bubble);
+  chat.appendChild(row);
+  chat.scrollTop = chat.scrollHeight;
+  return bubble;
+}
+
+// ── Typing indicator ──────────────────────────────────────────────────────────
+let typingRow = null;
+function showTyping() {
+  const chat = document.getElementById('chat');
+  typingRow = document.createElement('div');
+  typingRow.className = 'bubble-row bot';
+  typingRow.innerHTML = `
+    <div class="ava">🎓</div>
+    <div class="bubble bot typing">
+      <span></span><span></span><span></span>
+    </div>`;
+  chat.appendChild(typingRow);
+  chat.scrollTop = chat.scrollHeight;
+}
+function hideTyping() {
+  if (typingRow) { typingRow.remove(); typingRow = null; }
+}
+
+// ── Send message ─────────────────────────────────────────────────────────────
+async function sendMessage() {
+  const input = document.getElementById('msg-input');
+  const text  = input.value.trim();
+  if (!text) return;
+
+  const sendBtn = document.getElementById('send-btn');
+  sendBtn.disabled = true;
+  input.value = '';
+  input.style.height = 'auto';
+
+  // Display user bubble
+  appendBubble('user', text);
+  messages.push({ role: 'user', content: text });
+
+  // Sliding window (last 20 turns = 40 messages)
+  const MAX = 40;
+  const window = messages.length > MAX ? messages.slice(-MAX) : messages;
+
+  showTyping();
+
+  const apiKey   = document.getElementById('txt-apikey').value.trim();
+  const level    = document.getElementById('sel-level').value;
+  const interests= document.getElementById('txt-interests').value || 'general';
+  const model    = document.getElementById('sel-model').value;
+
+  try {
+    // Prefer env-configured API (deployed); fall back to direct call with user key
+    const useProxy = !apiKey;
+    let reply;
+
+    if (useProxy) {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: window, level, interests, model }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      reply = data.reply;
+    } else {
+      // Direct OpenAI call (client-side, for local dev with user-supplied key)
+      const sysPrompt = buildSystemPrompt(level, interests);
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'system', content: sysPrompt }, ...window],
+          temperature: 0.7,
+          max_tokens: 1200,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      reply = data.choices[0].message.content;
+    }
+
+    hideTyping();
+    appendBubble('bot', renderAI(reply), true);
+    messages.push({ role: 'assistant', content: reply });
+
+  } catch (err) {
+    hideTyping();
+    appendBubble('bot', `⚠️ 오류: ${err.message}`, false);
+  }
+
+  sendBtn.disabled = false;
+  input.focus();
+}
+
+// ── Client-side system prompt (for direct API calls) ─────────────────────────
+function buildSystemPrompt(level, interests) {
+  return `You are a kind, patient, and encouraging native English tutor.
+The student's proficiency level is: ${level}.
+The student's interests / preferred topics are: ${interests}.
+
+When the student writes in English, always reply with these three sections:
+
+## ✏️ Step 1: Sentence Correction & Feedback
+- Identify unnatural or incorrect parts. Show as: ❌ "original" → ✅ "corrected"
+- Only flag critical errors. Explain each in Korean (한국어로).
+- If perfect: "완벽해요! 🎉"
+
+## 💯 Step 2: Full Corrected Sentence
+Complete polished sentence in a markdown blockquote (> …).
+
+## 💬 Step 3: Let's Keep Talking!
+React warmly and ask 1–2 natural follow-up questions in English. Casual, friendly tone.
+
+EXCEPTION: If the student writes in Korean, respond with:
+## 🌏 영어로 이렇게 말해요!
+Natural English translation + 2–3 alternatives + Korean nuance note.`;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+updateHeaderSub();
+document.getElementById('sel-level').addEventListener('change', updateHeaderSub);
+document.getElementById('txt-interests').addEventListener('input', updateHeaderSub);
+</script>
+</body>
+</html>
