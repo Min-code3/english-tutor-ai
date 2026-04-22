@@ -243,8 +243,6 @@
     <option value="gpt-4o">gpt-4o (고품질 ✨)</option>
   </select>
 
-  <label>🔑 OpenAI API Key <small>(선택)</small></label>
-  <input type="password" id="txt-apikey" placeholder="sk-…" />
 
   <button class="primary" onclick="newChat()">🔄 새 대화 시작</button>
 </div>
@@ -428,45 +426,21 @@ async function sendMessage() {
 
   showTyping();
 
-  const apiKey   = document.getElementById('txt-apikey').value.trim();
   const level    = document.getElementById('sel-level').value;
   const interests= document.getElementById('txt-interests').value || 'general';
   const model    = document.getElementById('sel-model').value;
 
   try {
-    // Prefer env-configured API (deployed); fall back to direct call with user key
-    const useProxy = !apiKey;
     let reply;
 
-    if (useProxy) {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: window, level, interests, model }),
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      reply = data.reply;
-    } else {
-      // Direct OpenAI call (client-side, for local dev with user-supplied key)
-      const sysPrompt = buildSystemPrompt(level, interests);
-      const res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model,
-          messages: [{ role: 'system', content: sysPrompt }, ...window],
-          temperature: 0.7,
-          max_tokens: 1200,
-        }),
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
-      reply = data.choices[0].message.content;
-    }
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: window, level, interests, model }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    reply = data.reply;
 
     hideTyping();
     appendBubble('bot', renderAI(reply), true);
@@ -481,29 +455,6 @@ async function sendMessage() {
   input.focus();
 }
 
-// ── Client-side system prompt (for direct API calls) ─────────────────────────
-function buildSystemPrompt(level, interests) {
-  return `You are a kind, patient, and encouraging native English tutor.
-The student's proficiency level is: ${level}.
-The student's interests / preferred topics are: ${interests}.
-
-When the student writes in English, always reply with these three sections:
-
-## ✏️ Step 1: Sentence Correction & Feedback
-- Identify unnatural or incorrect parts. Show as: ❌ "original" → ✅ "corrected"
-- Only flag critical errors. Explain each in Korean (한국어로).
-- If perfect: "완벽해요! 🎉"
-
-## 💯 Step 2: Full Corrected Sentence
-Complete polished sentence in a markdown blockquote (> …).
-
-## 💬 Step 3: Let's Keep Talking!
-React warmly and ask 1–2 natural follow-up questions in English. Casual, friendly tone.
-
-EXCEPTION: If the student writes in Korean, respond with:
-## 🌏 영어로 이렇게 말해요!
-Natural English translation + 2–3 alternatives + Korean nuance note.`;
-}
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 updateHeaderSub();
