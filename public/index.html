@@ -130,6 +130,31 @@ header {
 .compare-preview { font-size: 13px; color: #334155; font-style: italic; margin-bottom: 4px; }
 .compare-hint { font-size: 11px; color: #64748b; }
 
+/* ── Custom calendar ── */
+#cal-modal { display:none; position:fixed; inset:0; z-index:200; }
+#cal-modal.open { display:block; }
+#cal-backdrop { position:absolute; inset:0; background:rgba(0,0,0,.4); }
+#cal-box {
+  position:absolute; top:64px; left:50%; transform:translateX(-50%);
+  background:#fff; border-radius:16px; padding:16px;
+  width:300px; box-shadow:0 8px 32px rgba(0,0,0,.2);
+}
+.cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.cal-header span { font-weight:700; font-size:15px; }
+.cal-nav { background:none; border:none; font-size:18px; cursor:pointer; padding:4px 8px; border-radius:8px; }
+.cal-nav:hover { background:#f0f0f0; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+.cal-dow { text-align:center; font-size:11px; font-weight:700; color:#888; padding:4px 0; }
+.cal-day {
+  text-align:center; padding:7px 2px; border-radius:8px;
+  font-size:13px; cursor:pointer; border:none; background:none;
+}
+.cal-day:hover { background:#e5f7ee; }
+.cal-day.today { background:var(--teal2); color:#fff; font-weight:700; }
+.cal-day.selected { border:2px solid var(--teal2); font-weight:700; color:var(--teal2); }
+.cal-day.other-month { color:#ccc; }
+.cal-day.has-record::after { content:'•'; display:block; font-size:8px; color:var(--green); margin-top:-4px; }
+
 /* ── Past date notice ── */
 .past-notice { text-align: center; background: #fef9c3; color: #854d0e; font-size: 12px; padding: 6px 12px; border-radius: 8px; margin: 4px 10px; flex-shrink: 0; }
 
@@ -168,13 +193,12 @@ header {
       <h1>AI English Tutor</h1>
       <div class="date-nav">
         <button class="date-nav-btn" onclick="moveDate(-1)" title="전날">‹</button>
-        <button class="date-nav-label" onclick="document.getElementById('date-input').showPicker()">
+        <button class="date-nav-label" onclick="openCal()">
           📅 <span id="date-display">오늘</span>
         </button>
         <button class="date-nav-btn" onclick="moveDate(1)" title="다음날">›</button>
         <button class="date-nav-btn" onclick="handleDateChange(todayStr())" title="오늘">•</button>
       </div>
-      <input type="date" id="date-input" onchange="handleDateChange(this.value)" />
     </div>
     <div class="h-right">
       <span class="user-email" id="user-email"></span>
@@ -200,6 +224,24 @@ header {
 
 <!-- Save toast -->
 <div id="save-toast" class="save-toast">✓ 저장됨</div>
+
+<!-- Custom Calendar Modal -->
+<div id="cal-modal">
+  <div id="cal-backdrop" onclick="closeCal()"></div>
+  <div id="cal-box">
+    <div class="cal-header">
+      <button class="cal-nav" onclick="calMove(-1)">‹</button>
+      <span id="cal-title"></span>
+      <button class="cal-nav" onclick="calMove(1)">›</button>
+    </div>
+    <div class="cal-grid">
+      <div class="cal-dow">일</div><div class="cal-dow">월</div><div class="cal-dow">화</div>
+      <div class="cal-dow">수</div><div class="cal-dow">목</div><div class="cal-dow">금</div>
+      <div class="cal-dow">토</div>
+    </div>
+    <div id="cal-days" class="cal-grid"></div>
+  </div>
+</div>
 
 <!-- Overlay + Drawer -->
 <div id="overlay" onclick="closeDrawer()"></div>
@@ -582,6 +624,61 @@ function showToast() {
 }
 
 // ── Date change ───────────────────────────────────────────────────────────
+// ── Custom Calendar ───────────────────────────────────────────────────────
+let calYear, calMonth;
+
+function openCal() {
+  const d = new Date(currentDate + 'T00:00:00');
+  calYear  = d.getFullYear();
+  calMonth = d.getMonth();
+  renderCal();
+  document.getElementById('cal-modal').classList.add('open');
+}
+function closeCal() {
+  document.getElementById('cal-modal').classList.remove('open');
+}
+function calMove(dir) {
+  calMonth += dir;
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0;  calYear++; }
+  renderCal();
+}
+function renderCal() {
+  const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  document.getElementById('cal-title').textContent = `${calYear}년 ${months[calMonth]}`;
+
+  const today    = todayStr();
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const lastDate = new Date(calYear, calMonth + 1, 0).getDate();
+  const prevLast = new Date(calYear, calMonth, 0).getDate();
+
+  let html = '';
+  // 이전 달 날짜
+  for (let i = firstDay - 1; i >= 0; i--) {
+    html += `<button class="cal-day other-month" disabled>${prevLast - i}</button>`;
+  }
+  // 이번 달
+  for (let d = 1; d <= lastDate; d++) {
+    const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    let cls = 'cal-day';
+    if (ds === today)        cls += ' today';
+    if (ds === currentDate)  cls += ' selected';
+    html += `<button class="${cls}" onclick="pickDate('${ds}')">${d}</button>`;
+  }
+  // 다음 달 채우기
+  const remaining = 7 - ((firstDay + lastDate) % 7 || 7);
+  if (remaining < 7) {
+    for (let d = 1; d <= remaining; d++) {
+      html += `<button class="cal-day other-month" disabled>${d}</button>`;
+    }
+  }
+  document.getElementById('cal-days').innerHTML = html;
+}
+function pickDate(ds) {
+  closeCal();
+  handleDateChange(ds);
+}
+
 function moveDate(days) {
   const d = new Date(currentDate + 'T00:00:00');
   d.setDate(d.getDate() + days);
