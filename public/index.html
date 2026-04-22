@@ -279,6 +279,7 @@ let currentDate  = todayStr();        // YYYY-MM-DD
 let messages     = [];                // current chat messages
 let questions    = [];                // loaded from questions.json
 let currentQuestion = '';
+let appInited    = false;             // guard: initApp runs only once
 
 // ── Auth ──────────────────────────────────────────────────────────────────
 async function loginWithGoogle() {
@@ -297,11 +298,15 @@ async function logout() {
 sb.auth.onAuthStateChange(async (event, session) => {
   if (session?.user) {
     currentUser = session.user;
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display         = 'flex';
-    document.getElementById('user-email').textContent    = currentUser.email;
-    await initApp();
+    document.getElementById('user-email').textContent = currentUser.email;
+    if (!appInited) {
+      appInited = true;
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display         = 'flex';
+      await initApp();
+    }
   } else {
+    appInited = false;
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('app').style.display          = 'none';
   }
