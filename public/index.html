@@ -400,21 +400,19 @@ async function loadDate(dateStr) {
       currentQuestion = record.question;
       messages = record.messages;
       chat.innerHTML = '';
-      await renderAllMessages();
+      renderAllMessages();
     } else if (record?.question) {
-      // 질문만 저장된 경우 (대화 없음)
       if (record.question !== currentQuestion) {
         currentQuestion = record.question;
         chat.innerHTML = '';
-        await showDailyQuestion(dateStr, currentQuestion);
+        showDailyQuestion(dateStr, currentQuestion);
       }
     } else {
-      // DB에 없으면 case 로직으로 질문 결정
       const q = await determineQuestion(dateStr);
       if (q !== currentQuestion) {
         currentQuestion = q;
         chat.innerHTML = '';
-        await showDailyQuestion(dateStr, currentQuestion);
+        showDailyQuestion(dateStr, currentQuestion);
       }
     }
   } catch (err) {
@@ -423,30 +421,9 @@ async function loadDate(dateStr) {
 }
 
 // ── Render helpers ────────────────────────────────────────────────────────
-async function showDailyQuestion(dateStr, question) {
+function showDailyQuestion(dateStr, question) {
   const d = new Date(dateStr + 'T00:00:00');
   const dateLabel = `${d.getMonth()+1}월 ${d.getDate()}일`;
-
-  // 전월 기록 있으면 비교 카드 표시
-  const prevStr = getPrevMonthDate(dateStr);
-  const prevRec = await getRecord(prevStr);
-  const prevD   = new Date(prevStr + 'T00:00:00');
-  const prevLabel = `${prevD.getMonth()+1}월 ${prevD.getDate()}일`;
-
-  let compareHtml = '';
-  if (prevRec && prevRec.messages?.length > 0) {
-    // 전월 첫 번째 유저 메시지 미리보기
-    const firstUserMsg = prevRec.messages.find(m => m.role === 'user');
-    const preview = firstUserMsg
-      ? `"${firstUserMsg.content.slice(0, 80)}${firstUserMsg.content.length > 80 ? '…' : ''}"`
-      : '(기록 있음)';
-    compareHtml = `
-      <div class="compare-card" onclick="loadDate('${prevStr}')">
-        <div class="compare-title">📖 ${prevLabel} 나의 답변 보기</div>
-        <div class="compare-preview">${preview}</div>
-        <div class="compare-hint">탭해서 전월 기록 확인 →</div>
-      </div>`;
-  }
 
   const html = `
     <div class="sec sec-question">
@@ -454,24 +431,43 @@ async function showDailyQuestion(dateStr, question) {
       <div class="q-text">${question.replace(/\n/g, '<br>')}</div>
       <div class="q-sub">영어로 대답해봐! 틀려도 괜찮아 — 함께 고쳐나가요 😊</div>
     </div>
-    ${compareHtml}`;
+    <div id="compare-slot"></div>`;
   appendBubble('bot', html, true);
+
+  // 비교 카드는 DB에서 백그라운드로 로드
+  loadCompareCard(dateStr);
 }
 
-async function renderAllMessages() {
+async function loadCompareCard(dateStr) {
+  try {
+    const prevStr = getPrevMonthDate(dateStr);
+    const prevRec = await getRecord(prevStr);
+    if (!prevRec?.messages?.length) return;
+
+    const prevD = new Date(prevStr + 'T00:00:00');
+    const prevLabel = `${prevD.getMonth()+1}월 ${prevD.getDate()}일`;
+    const firstUserMsg = prevRec.messages.find(m => m.role === 'user');
+    const preview = firstUserMsg
+      ? `"${firstUserMsg.content.slice(0, 80)}${firstUserMsg.content.length > 80 ? '…' : ''}"`
+      : '(기록 있음)';
+
+    const slot = document.getElementById('compare-slot');
+    if (slot) slot.innerHTML = `
+      <div class="compare-card" onclick="loadDate('${prevStr}')">
+        <div class="compare-title">📖 ${prevLabel} 나의 답변 보기</div>
+        <div class="compare-preview">${preview}</div>
+        <div class="compare-hint">탭해서 전월 기록 확인 →</div>
+      </div>`;
+  } catch (e) { /* 비교카드 실패해도 무시 */ }
+}
+
+function renderAllMessages() {
   const chat = document.getElementById('chat');
   chat.innerHTML = '';
-
-  // Show question card first
-  await showDailyQuestion(currentDate, currentQuestion);
-
-  // Render conversation
+  showDailyQuestion(currentDate, currentQuestion);
   for (const msg of messages) {
-    if (msg.role === 'user') {
-      appendBubble('user', msg.content, false);
-    } else {
-      appendBubble('bot', renderAI(msg.content), true);
-    }
+    if (msg.role === 'user') appendBubble('user', msg.content, false);
+    else                     appendBubble('bot', renderAI(msg.content), true);
   }
 }
 
