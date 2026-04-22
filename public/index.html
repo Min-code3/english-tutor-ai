@@ -322,23 +322,39 @@ function getPrevMonthDate(dateStr) {
 }
 
 // ── Supabase DB ───────────────────────────────────────────────────────────
+function withTimeout(promise, ms = 5000) {
+  const t = new Promise((_, rej) => setTimeout(() => rej(new Error('DB 타임아웃')), ms));
+  return Promise.race([promise, t]);
+}
+
 async function getRecord(dateStr) {
-  const { data } = await sb.from('records')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .eq('date', dateStr)
-    .maybeSingle();
-  return data;
+  try {
+    const { data, error } = await withTimeout(
+      sb.from('records').select('*')
+        .eq('user_id', currentUser.id)
+        .eq('date', dateStr)
+        .maybeSingle()
+    );
+    if (error) { console.warn('getRecord:', error.message); return null; }
+    return data;
+  } catch (e) {
+    console.warn('getRecord timeout/error:', e.message);
+    return null;
+  }
 }
 
 async function saveRecord(dateStr, question, msgs) {
-  await sb.from('records').upsert({
-    user_id:  currentUser.id,
-    date:     dateStr,
-    question: question,
-    messages: msgs,
-    updated_at: new Date().toISOString(),
-  }, { onConflict: 'user_id,date' });
+  try {
+    await withTimeout(sb.from('records').upsert({
+      user_id:  currentUser.id,
+      date:     dateStr,
+      question: question,
+      messages: msgs,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id,date' }));
+  } catch (e) {
+    console.warn('saveRecord error:', e.message);
+  }
 }
 
 // ── Question logic ────────────────────────────────────────────────────────
@@ -369,25 +385,40 @@ async function loadDate(dateStr) {
 
   messages = [];
   const chat = document.getElementById('chat');
-  chat.innerHTML = '<div style="text-align:center;padding:20px;color:#888;font-size:13px">⏳ 불러오는 중...</div>';
 
+  // 1단계: 질문 즉시 표시 (DB 없이 스케줄에서)
+  currentQuestion = getScheduledQuestion(dateStr, questions);
+  chat.innerHTML = '';
+  await showDailyQuestion(dateStr, currentQuestion);
+
+  // 2단계: DB에서 실제 데이터 로드 (백그라운드)
   try {
     const record = await getRecord(dateStr);
-    chat.innerHTML = '';
 
     if (record && record.messages?.length > 0) {
+      // 저장된 대화 있으면 복원
       currentQuestion = record.question;
       messages = record.messages;
+      chat.innerHTML = '';
       await renderAllMessages();
+    } else if (record?.question) {
+      // 질문만 저장된 경우 (대화 없음)
+      if (record.question !== currentQuestion) {
+        currentQuestion = record.question;
+        chat.innerHTML = '';
+        await showDailyQuestion(dateStr, currentQuestion);
+      }
     } else {
-      currentQuestion = record?.question || await determineQuestion(dateStr);
-      await showDailyQuestion(dateStr, currentQuestion);
+      // DB에 없으면 case 로직으로 질문 결정
+      const q = await determineQuestion(dateStr);
+      if (q !== currentQuestion) {
+        currentQuestion = q;
+        chat.innerHTML = '';
+        await showDailyQuestion(dateStr, currentQuestion);
+      }
     }
   } catch (err) {
-    chat.innerHTML = `<div style="text-align:center;padding:20px;color:#e00;font-size:13px">
-      ⚠️ 오류: ${err.message}<br><small>Supabase SQL이 실행됐는지 확인해주세요</small>
-    </div>`;
-    console.error('loadDate error:', err);
+    console.warn('DB 로드 실패 (오프라인 모드로 진행):', err.message);
   }
 }
 
