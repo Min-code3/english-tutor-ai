@@ -363,29 +363,31 @@ async function determineQuestion(dateStr) {
 async function loadDate(dateStr) {
   currentDate = dateStr;
 
-  // Update header
   document.getElementById('date-display').textContent = formatDateKR(dateStr);
   document.getElementById('date-input').value = dateStr;
+  document.getElementById('past-notice').style.display = dateStr < todayStr() ? 'block' : 'none';
 
-  // Past date notice
-  const isPast = dateStr < todayStr();
-  document.getElementById('past-notice').style.display = isPast ? 'block' : 'none';
-
-  // Clear chat
   messages = [];
-  document.getElementById('chat').innerHTML = '';
+  const chat = document.getElementById('chat');
+  chat.innerHTML = '<div style="text-align:center;padding:20px;color:#888;font-size:13px">⏳ 불러오는 중...</div>';
 
-  // Load or create record
-  const record = await getRecord(dateStr);
-  if (record && record.messages?.length > 0) {
-    // Restore existing conversation
-    currentQuestion = record.question;
-    messages = record.messages;
-    renderAllMessages();
-  } else {
-    // New conversation — determine today's question
-    currentQuestion = record?.question || await determineQuestion(dateStr);
-    await showDailyQuestion(dateStr, currentQuestion);
+  try {
+    const record = await getRecord(dateStr);
+    chat.innerHTML = '';
+
+    if (record && record.messages?.length > 0) {
+      currentQuestion = record.question;
+      messages = record.messages;
+      await renderAllMessages();
+    } else {
+      currentQuestion = record?.question || await determineQuestion(dateStr);
+      await showDailyQuestion(dateStr, currentQuestion);
+    }
+  } catch (err) {
+    chat.innerHTML = `<div style="text-align:center;padding:20px;color:#e00;font-size:13px">
+      ⚠️ 오류: ${err.message}<br><small>Supabase SQL이 실행됐는지 확인해주세요</small>
+    </div>`;
+    console.error('loadDate error:', err);
   }
 }
 
