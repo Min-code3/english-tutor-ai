@@ -1,4 +1,5 @@
-streamlit>=1.32.0
+flask>=3.0.0
 openai>=1.12.0
 python-dotenv>=1.0.0
 markdown>=3.5.2
+streamlit>=1.32.0
