@@ -385,7 +385,7 @@ async function loadDate(dateStr) {
   } else {
     // New conversation — determine today's question
     currentQuestion = record?.question || await determineQuestion(dateStr);
-    showDailyQuestion(dateStr, currentQuestion);
+    await showDailyQuestion(dateStr, currentQuestion);
   }
 }
 
@@ -425,12 +425,12 @@ async function showDailyQuestion(dateStr, question) {
   appendBubble('bot', html, true);
 }
 
-function renderAllMessages() {
+async function renderAllMessages() {
   const chat = document.getElementById('chat');
   chat.innerHTML = '';
 
   // Show question card first
-  showDailyQuestion(currentDate, currentQuestion);
+  await showDailyQuestion(currentDate, currentQuestion);
 
   // Render conversation
   for (const msg of messages) {
