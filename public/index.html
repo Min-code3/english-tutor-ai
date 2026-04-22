@@ -341,15 +341,22 @@ async function saveRecord(dateStr, question, msgs) {
   }, { onConflict: 'user_id,date' });
 }
 
-// ── Question logic (심플 버전) ─────────────────────────────────────────────
-// 전월 기록 있음 → 같은 질문 (한 달 전 나와 비교)
-// 전월 기록 없음 → MM-DD 스케줄에서 새 질문
+// ── Question logic ────────────────────────────────────────────────────────
+// 전월 없음                           → 새 질문
+// 전월 있음 + 전전월 없음              → 전월 동일
+// 전월 있음 + 전전월 있음 + 질문 다름  → 전월 동일 (아직 한 번만 반복)
+// 전월 있음 + 전전월 있음 + 질문 같음  → 새 질문   (두 달 연속 반복 → 넘어감)
 async function determineQuestion(dateStr) {
-  const prevStr = getPrevMonthDate(dateStr);
-  const prevRec = await getRecord(prevStr);
+  const prev1Str = getPrevMonthDate(dateStr);
+  const prev2Str = getPrevMonthDate(prev1Str);
 
-  if (prevRec) return prevRec.question;            // 전월 기록 있으면 동일 질문
-  return getScheduledQuestion(dateStr, questions); // 없으면 스케줄에서 새 질문
+  const rec1 = await getRecord(prev1Str);
+  const rec2 = await getRecord(prev2Str);
+
+  if (!rec1)                              return getScheduledQuestion(dateStr, questions);
+  if (!rec2)                              return rec1.question;
+  if (rec1.question !== rec2.question)    return rec1.question;
+  return getScheduledQuestion(dateStr, questions);
 }
 
 // ── Load a date ───────────────────────────────────────────────────────────
@@ -411,7 +418,7 @@ async function showDailyQuestion(dateStr, question) {
   const html = `
     <div class="sec sec-question">
       <div class="sec-title">📅 ${dateLabel} 오늘의 주제</div>
-      <div class="q-text">${question}</div>
+      <div class="q-text">${question.replace(/\n/g, '<br>')}</div>
       <div class="q-sub">영어로 대답해봐! 틀려도 괜찮아 — 함께 고쳐나가요 😊</div>
     </div>
     ${compareHtml}`;
