@@ -432,7 +432,6 @@ async function loadDate(dateStr) {
   currentDate = dateStr;
 
   document.getElementById('date-display').textContent = formatDateKR(dateStr);
-  document.getElementById('date-input').value = dateStr;
   document.getElementById('past-notice').style.display = dateStr < todayStr() ? 'block' : 'none';
 
   messages = [];
