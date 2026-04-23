@@ -121,11 +121,12 @@ header {
 
 /* ── Daily question card ── */
 .q-card {
-  background: var(--surface); border-radius: var(--r); padding: 18px 20px;
-  box-shadow: var(--shadow-sm); border-left: 4px solid #F59E0B; margin-bottom: 4px;
+  background: var(--surface); border-radius: var(--r); padding: 22px 24px 18px;
+  box-shadow: var(--shadow-sm); border-top: 3px solid #F59E0B;
+  margin-bottom: 8px; text-align: center;
 }
-.q-card-label { font-size: 11px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
-.q-card-text { font-size: 18px; font-weight: 700; color: var(--text-1); line-height: 1.45; margin-bottom: 8px; }
+.q-card-label { font-size: 11px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; }
+.q-card-text { font-size: 19px; font-weight: 700; color: var(--text-1); line-height: 1.45; margin-bottom: 10px; }
 .q-card-sub { font-size: 13px; color: var(--text-2); }
 
 /* ── Compare card ── */
@@ -202,6 +203,17 @@ header {
 }
 .bookmark-btn:hover { background: #FFFBEB; color: #D97706; }
 .bookmark-btn.saved { color: #D97706; }
+
+/* ── Per-message delete ── */
+.turn-del {
+  width: 22px; height: 22px; border-radius: 50%; border: none;
+  background: none; color: var(--text-3); font-size: 14px; line-height: 1;
+  cursor: pointer; flex-shrink: 0; align-self: flex-end; padding: 0;
+  transition: all .15s; opacity: 0;
+}
+.bubble-row.right:hover .turn-del,
+.bubble-row.right:focus-within .turn-del { opacity: 1; }
+.turn-del:hover { background: #FEE2E2; color: #EF4444; opacity: 1; }
 
 /* ── Korean mode bubble ── */
 .ko-bubble {
@@ -635,10 +647,23 @@ function renderAllMessages() {
   const chat = document.getElementById('chat');
   chat.innerHTML = '';
   showDailyQuestion(currentDate, currentQuestion);
-  for (const msg of messages) {
-    if (msg.role === 'user') appendBubble('user', msg.content);
-    else renderAIResponse(msg.content);
+  for (let i = 0; i < messages.length; i++) {
+    if (messages[i].role === 'user') appendUserBubble(messages[i].content, i);
+    else renderAIResponse(messages[i].content);
   }
+}
+
+function appendUserBubble(content, idx) {
+  const chat = document.getElementById('chat');
+  const row = document.createElement('div');
+  row.className = 'bubble-row right';
+  const del = document.createElement('button');
+  del.className = 'turn-del'; del.title = '이 메시지 삭제'; del.textContent = '×';
+  del.addEventListener('click', () => deleteTurn(idx));
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble user'; bubble.textContent = content;
+  row.appendChild(del); row.appendChild(bubble);
+  chat.appendChild(row); chat.scrollTop = chat.scrollHeight;
 }
 
 function appendBubble(role, content, isHtml = false) {
@@ -654,48 +679,50 @@ function appendBubble(role, content, isHtml = false) {
   bubble.className = `bubble ${role === 'user' ? 'user' : 'bot'}`;
   if (isHtml) bubble.innerHTML = content; else bubble.textContent = content;
   row.appendChild(bubble);
-  chat.appendChild(row);
-  chat.scrollTop = chat.scrollHeight;
+  chat.appendChild(row); chat.scrollTop = chat.scrollHeight;
   return bubble;
+}
+
+async function deleteTurn(idx) {
+  if (!confirm('이 메시지를 삭제할까요?')) return;
+  const count = (idx + 1 < messages.length && messages[idx + 1]?.role === 'assistant') ? 2 : 1;
+  messages.splice(idx, count);
+  renderAllMessages();
+  await saveRecord(currentDate, currentQuestion, messages);
+  showToast('메시지 삭제됨');
 }
 
 // ── AI response parsing & rendering ───────────────────────────────────────
 function parseAIResponse(content) {
-  // Korean mode
-  const koM = content.match(/##\s*🌏[^\n]*\n([\s\S]+)$/i);
-  if (koM) return { type: 'korean', text: koM[1].trim() };
+  if (/##\s*🌏/.test(content)) {
+    const m = content.match(/##\s*🌏[^\n]*\n([\s\S]+)/);
+    return { type: 'korean', text: m ? m[1].trim() : content };
+  }
+  if (!/##\s*💯/.test(content)) return { type: 'old', content };
 
-  // New format
-  if (/##\s*💯/.test(content)) {
-    const correctedM = content.match(/##\s*💯[^\n]*\n([\s\S]+?)(?=##\s*[✏💬]|$)/);
-    const correctionsM = content.match(/##\s*✏️?[^\n]*\n([\s\S]+?)(?=##\s*💬|$)/);
-    const chatM = content.match(/##\s*💬[^\n]*\n([\s\S]+?)$/);
-
-    const items = [];
-    if (correctionsM) {
-      const lines = correctionsM[1].split('\n');
-      for (const line of lines) {
-        if (!line.trim().startsWith('ITEM::')) continue;
-        const parts = line.replace(/^ITEM::/, '').split('::');
-        if (parts.length >= 3) {
-          items.push({
-            original: parts[0].trim(),
-            corrected: parts[1].trim(),
-            reason: parts.slice(2).join('::').trim()
-          });
-        }
-      }
-    }
-    return {
-      type: 'new',
-      corrected: correctedM ? correctedM[1].trim() : null,
-      items,
-      chat: chatM ? chatM[1].trim() : null
-    };
+  // Split into sections by ## headers
+  const sections = {};
+  for (const part of content.split(/(?=##\s)/)) {
+    const hm = part.match(/^##\s+(.+?)[\r\n]/);
+    if (!hm) continue;
+    const body = part.slice(hm[0].length).trim();
+    if (/💯/.test(hm[1]))       sections.corrected    = body;
+    else if (/✏/.test(hm[1]))   sections.corrections  = body;
+    else if (/💬/.test(hm[1]))  sections.chat         = body;
   }
 
-  // Old format
-  return { type: 'old', content };
+  const items = [];
+  if (sections.corrections && !/^NONE/i.test(sections.corrections.trim())) {
+    for (const line of sections.corrections.split('\n')) {
+      const t = line.trim();
+      if (!t.startsWith('ITEM::')) continue;
+      const cols = t.slice(6).split('::').map(s => s.trim());
+      if (cols.length >= 3)
+        items.push({ original: cols[0], corrected: cols[1], reason: cols.slice(2).join('::').trim() });
+    }
+  }
+
+  return { type: 'new', corrected: sections.corrected || null, items, chat: sections.chat || null };
 }
 
 function renderAIResponse(content) {
@@ -858,7 +885,7 @@ async function sendMessage() {
   btn.disabled = true;
   input.value = ''; input.style.height = 'auto';
 
-  appendBubble('user', text);
+  appendUserBubble(text, messages.length);
   messages.push({ role: 'user', content: text });
 
   const MAX = 40;
