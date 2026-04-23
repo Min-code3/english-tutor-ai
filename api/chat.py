@@ -6,28 +6,30 @@ app = Flask(__name__)
 
 MAX_TURNS = 20
 
-SYSTEM_TEMPLATE = """You are a kind, patient, and encouraging native English tutor.
-The student's proficiency level is: **{level}**.
-The student's interests / preferred topics are: **{interests}**.
+SYSTEM = """You are a warm, encouraging English conversation tutor for Korean speakers.
 
-When the student writes in English, always reply with these three sections:
+Always reply in this EXACT format (never skip or rename any section):
 
-## ✏️ Step 1: Sentence Correction & Feedback
-- Identify unnatural or incorrect parts. Show as: ❌ "original" → ✅ "corrected"
-- Only flag critical errors. Explain each in Korean (한국어로).
-- If perfect: "완벽해요! 🎉"
+## 💯 CORRECTED
+Write the full corrected version of the user's message. Fix all grammar, word choice, and naturalness. Keep their original meaning completely.
 
-## 💯 Step 2: Full Corrected Sentence
-Complete polished sentence in a markdown blockquote (> …).
+## ✏️ CORRECTIONS
+List each correction on its own line in exactly this format:
+ITEM:: [original phrase] :: [corrected phrase] :: [Korean explanation in 1-2 sentences]
 
-## 💬 Step 3: Let's Keep Talking!
-React warmly and ask 1–2 natural follow-up questions in English. Casual, friendly tone.
+Rules:
+- If the user included Korean words or expressions (e.g. 뒤심이 약하다), include an ITEM to give the natural English equivalent
+- List the most important corrections only (up to 5 items)
+- If there are truly no errors, write the single word: NONE
 
-EXCEPTION: If the student writes in Korean, respond with:
-## 🌏 영어로 이렇게 말해요!
-Natural English translation + 2–3 alternatives + Korean nuance note.
+## 💬 CHAT
+2-3 sentences. Be warm and encouraging. React to what they said and ask one natural follow-up question. English only.
 
-Always match vocabulary to the student's {level} level."""
+---
+EXCEPTION — If the user writes ONLY in Korean (zero English):
+Do NOT use the format above. Instead respond with:
+## 🌏 KOREAN
+[In Korean: encourage them to try writing in English, and give a useful example English sentence they could use.]"""
 
 
 @app.route("/api/chat", methods=["POST", "OPTIONS"])
@@ -35,10 +37,7 @@ def chat():
     if request.method == "OPTIONS":
         return _cors(jsonify({}))
 
-    data     = request.get_json(force=True) or {}
-    level    = data.get("level", "Intermediate")
-    interests= data.get("interests", "daily life")
-    model    = data.get("model", "gpt-4o-mini")
+    data = request.get_json(force=True) or {}
     messages = data.get("messages", [])
 
     window = messages[-(MAX_TURNS * 2):] if len(messages) > MAX_TURNS * 2 else messages
@@ -50,11 +49,8 @@ def chat():
     try:
         client = OpenAI(api_key=api_key)
         resp = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": SYSTEM_TEMPLATE.format(level=level, interests=interests)},
-                *window,
-            ],
+            model="gpt-4o-mini",
+            messages=[{"role": "system", "content": SYSTEM}, *window],
             temperature=0.7,
             max_tokens=1200,
         )
@@ -65,7 +61,7 @@ def chat():
 
 def _cors(response, status=200):
     response.status_code = status
-    response.headers["Access-Control-Allow-Origin"]  = "*"
+    response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type"
     response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
     return response

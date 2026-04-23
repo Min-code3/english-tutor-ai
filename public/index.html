@@ -3,38 +3,64 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AI English Tutor 💬</title>
+<title>AI English Tutor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/web/variable/pretendardvariable.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --green: #25d366; --teal: #075e54; --teal2: #128c7e;
-  --bg: #ece5dd; --white: #fff;
+  --primary: #2563EB;
+  --primary-dark: #1D4ED8;
+  --primary-light: #DBEAFE;
+  --bg: #F1F5F9;
+  --surface: #FFFFFF;
+  --text-1: #0F172A;
+  --text-2: #64748B;
+  --text-3: #94A3B8;
+  --border: #E2E8F0;
+  --green: #16A34A;
+  --green-bg: #F0FDF4;
+  --green-border: #86EFAC;
+  --amber: #D97706;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow: 0 4px 12px rgba(0,0,0,.08);
+  --shadow-md: 0 8px 24px rgba(0,0,0,.1);
+  --r: 20px;
+  --r-sm: 12px;
 }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+body {
+  font-family: "Pretendard Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--text-1);
+}
 
-/* ── Login Screen ── */
+/* ── Login ── */
 #login-screen {
   display: flex; align-items: center; justify-content: center;
-  height: 100dvh; background: linear-gradient(135deg, #075e54 0%, #128c7e 100%);
+  height: 100dvh;
+  background: linear-gradient(160deg, #1E3A8A 0%, #1D4ED8 40%, #3B82F6 100%);
 }
 .login-card {
-  background: white; border-radius: 24px; padding: 48px 36px;
-  text-align: center; width: 90%; max-width: 380px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  background: white; border-radius: 28px; padding: 48px 32px;
+  text-align: center; width: 90%; max-width: 360px;
+  box-shadow: 0 24px 64px rgba(0,0,0,.2);
 }
-.login-logo { font-size: 64px; margin-bottom: 16px; }
-.login-card h1 { font-size: 24px; font-weight: 800; color: #111; margin-bottom: 8px; }
-.login-card p { color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 32px; }
+.login-logo { font-size: 52px; margin-bottom: 20px; }
+.login-card h1 { font-size: 22px; font-weight: 800; color: var(--text-1); margin-bottom: 6px; }
+.login-card p { color: var(--text-2); font-size: 14px; line-height: 1.6; margin-bottom: 32px; }
 .google-btn {
-  width: 100%; padding: 14px 20px; border-radius: 12px;
-  border: 1.5px solid #e0e0e0; background: white; cursor: pointer;
-  font-size: 15px; font-weight: 600; color: #333;
-  display: flex; align-items: center; justify-content: center; gap: 12px;
-  transition: all .2s; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  width: 100%; padding: 14px 20px; border-radius: 14px;
+  border: 1.5px solid var(--border); background: white; cursor: pointer;
+  font-size: 15px; font-weight: 600; color: var(--text-1);
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: all .15s; box-shadow: var(--shadow-sm);
 }
-.google-btn:hover { background: #f8f8f8; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+.google-btn:hover { background: #F8FAFC; box-shadow: var(--shadow); }
 .google-icon { width: 20px; height: 20px; }
 
 /* ── App ── */
@@ -42,131 +68,296 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; b
 
 /* ── Header ── */
 header {
-  background: var(--teal); color: #fff; padding: 10px 14px;
+  background: var(--surface); padding: 10px 14px;
   display: flex; align-items: center; gap: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,.3); flex-shrink: 0;
+  border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 10;
 }
-.h-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--teal2); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.h-logo {
+  width: 36px; height: 36px; border-radius: 12px;
+  background: linear-gradient(135deg, #1D4ED8, #3B82F6);
+  display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+}
 .h-info { flex: 1; min-width: 0; }
-.h-info h1 { font-size: 15px; font-weight: 700; }
+.h-info h1 { font-size: 14px; font-weight: 700; color: var(--text-1); }
 .date-nav { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
-.date-nav-btn { background: rgba(255,255,255,.15); border: none; color: #fff; width: 24px; height: 24px; border-radius: 50%; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.date-nav-btn:hover { background: rgba(255,255,255,.3); }
-.date-nav-label { background: rgba(255,255,255,.15); border: none; color: #fff; padding: 3px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; }
-.date-nav-label:hover { background: rgba(255,255,255,.25); }
-#date-input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
-.h-right { display: flex; align-items: center; gap: 8px; }
-.user-email { font-size: 11px; opacity: .7; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.icon-btn { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; padding: 4px; }
+.date-nav-btn {
+  width: 26px; height: 26px; border-radius: 8px; border: none;
+  background: var(--bg); color: var(--text-2); font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: background .15s;
+}
+.date-nav-btn:hover { background: var(--border); }
+.date-nav-label {
+  background: var(--bg); border: none; color: var(--text-1);
+  padding: 4px 10px; border-radius: 10px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: background .15s;
+}
+.date-nav-label:hover { background: var(--border); }
+.h-actions { display: flex; align-items: center; gap: 2px; }
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 10px; border: none;
+  background: none; color: var(--text-2); font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all .15s;
+}
+.icon-btn:hover { background: var(--bg); }
+.icon-btn.del:hover { background: #FEF2F2; color: #EF4444; }
 
-/* ── Date badge ── */
-.date-badge { font-size: 11px; text-align: center; color: #888; padding: 6px 0 2px; }
+/* ── Past notice ── */
+#past-notice {
+  text-align: center; background: #FFFBEB; color: #92400E;
+  font-size: 12px; font-weight: 500; padding: 7px 12px;
+  border-bottom: 1px solid #FDE68A; flex-shrink: 0;
+}
 
 /* ── Chat ── */
-#chat { flex: 1; overflow-y: auto; padding: 8px 10px 8px; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
+#chat {
+  flex: 1; overflow-y: auto; padding: 16px 14px 8px;
+  display: flex; flex-direction: column; gap: 6px; scroll-behavior: smooth;
+}
+.date-badge {
+  font-size: 11px; color: var(--text-3); font-weight: 500;
+  padding: 4px 12px; background: rgba(0,0,0,.04); border-radius: 100px;
+  align-self: center; margin: 4px 0;
+}
+
+/* ── Daily question card ── */
+.q-card {
+  background: var(--surface); border-radius: var(--r); padding: 18px 20px;
+  box-shadow: var(--shadow-sm); border-left: 4px solid #F59E0B; margin-bottom: 4px;
+}
+.q-card-label { font-size: 11px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+.q-card-text { font-size: 18px; font-weight: 700; color: var(--text-1); line-height: 1.45; margin-bottom: 8px; }
+.q-card-sub { font-size: 13px; color: var(--text-2); }
+
+/* ── Compare card ── */
+.compare-card {
+  background: var(--primary-light); border-radius: 14px; padding: 12px 16px;
+  cursor: pointer; transition: opacity .15s; margin-top: 8px;
+}
+.compare-card:hover { opacity: .8; }
+.compare-title { font-size: 11px; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px; }
+.compare-preview { font-size: 13px; color: var(--text-2); font-style: italic; margin-bottom: 2px; }
+.compare-hint { font-size: 11px; color: var(--text-3); }
 
 /* ── Bubbles ── */
 .bubble-row { display: flex; align-items: flex-end; gap: 8px; }
-.bubble-row.user { flex-direction: row-reverse; }
-.b-ava { width: 30px; height: 30px; border-radius: 50%; background: var(--teal2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; }
-.bubble { padding: 10px 14px; border-radius: 18px; max-width: min(78%, 560px); font-size: 15px; line-height: 1.6; word-break: break-word; box-shadow: 0 1px 2px rgba(0,0,0,.1); }
-.bubble.user { background: #dcf8c6; border-bottom-right-radius: 4px; }
-.bubble.bot  { background: var(--white); border-bottom-left-radius: 4px; }
+.bubble-row.right { flex-direction: row-reverse; }
+.bubble-row.left  { flex-direction: row; }
+.b-ava {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, #1D4ED8, #3B82F6);
+  display: flex; align-items: center; justify-content: center; font-size: 15px;
+}
+.bubble {
+  padding: 11px 15px; border-radius: var(--r); word-break: break-word;
+  max-width: min(76%, 520px); font-size: 15px; line-height: 1.6;
+}
+.bubble.user {
+  background: var(--primary); color: white;
+  border-bottom-right-radius: 5px;
+  box-shadow: 0 2px 8px rgba(37,99,235,.22);
+}
+.bubble.bot {
+  background: var(--surface); color: var(--text-1);
+  border-bottom-left-radius: 5px; box-shadow: var(--shadow-sm);
+}
+.bubble.corrected {
+  background: var(--green-bg); color: var(--text-1);
+  border: 1.5px solid var(--green-border);
+  border-bottom-right-radius: 5px;
+  font-weight: 500; box-shadow: none;
+}
 
-/* ── Sections ── */
-.sec { border-radius: 8px; padding: 12px 14px; margin: 8px 0; font-size: 14px; line-height: 1.6; }
-.sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
-.sec-feedback  { background: #fffbeb; border-left: 4px solid #f59e0b; }
-.sec-feedback  .sec-title { color: #92400e; }
-.sec-corrected { background: #f0fdf4; border-left: 4px solid #22c55e; }
+/* ── Correction items ── */
+.corrections-block {
+  display: flex; flex-direction: column; gap: 8px;
+  align-self: flex-end; max-width: min(86%, 540px); width: 100%;
+}
+.correction-item {
+  background: var(--surface); border-radius: 16px;
+  padding: 14px 16px; box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+.ci-original {
+  display: flex; align-items: flex-start; gap: 6px;
+  font-size: 14px; color: var(--text-3);
+  text-decoration: line-through; margin-bottom: 6px;
+}
+.ci-corrected-row {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 8px; margin-bottom: 10px;
+}
+.ci-corrected-text {
+  display: flex; align-items: flex-start; gap: 6px;
+  font-size: 14px; font-weight: 600; color: var(--green);
+}
+.ci-mark { font-size: 13px; flex-shrink: 0; line-height: 1.6; }
+.ci-reason {
+  font-size: 13px; color: var(--text-2); line-height: 1.55;
+  padding-top: 8px; border-top: 1px solid var(--border);
+}
+.bookmark-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 15px; padding: 3px 5px; border-radius: 7px;
+  transition: background .15s; color: var(--text-3); flex-shrink: 0;
+}
+.bookmark-btn:hover { background: #FFFBEB; color: #D97706; }
+.bookmark-btn.saved { color: #D97706; }
+
+/* ── Korean mode bubble ── */
+.ko-bubble {
+  background: #FAF5FF; border: 1.5px solid #D8B4FE;
+  border-radius: var(--r); border-bottom-left-radius: 5px;
+  padding: 12px 16px; font-size: 14px; line-height: 1.6; color: var(--text-1);
+  max-width: min(76%, 520px); box-shadow: var(--shadow-sm);
+}
+
+/* ── Old format compat ── */
+.sec { border-radius: 10px; padding: 12px 14px; margin: 6px 0; font-size: 14px; line-height: 1.6; }
+.sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 7px; }
+.sec-feedback  { background: #FFFBEB; border-left: 4px solid #F59E0B; }
+.sec-feedback  .sec-title { color: #92400E; }
+.sec-corrected { background: var(--green-bg); border-left: 4px solid #22C55E; }
 .sec-corrected .sec-title { color: #166534; }
-.sec-chat      { background: #eff6ff; border-left: 4px solid #3b82f6; }
-.sec-chat      .sec-title { color: #1e40af; }
-.sec-korean    { background: #fdf4ff; border-left: 4px solid #a855f7; }
-.sec-korean    .sec-title { color: #6b21a8; }
-.sec-question  { background: #fff7ed; border-left: 4px solid #f97316; border-radius: 10px; padding: 16px 18px; }
-.sec-question  .sec-title { color: #c2410c; font-size: 12px; }
-.sec-question  .q-text { font-size: 17px; font-weight: 700; color: #1a1a1a; margin: 6px 0 10px; }
-.sec-question  .q-sub  { font-size: 13px; color: #666; }
-.sec p  { margin: .25rem 0; }
-.sec ul { margin: .25rem 0 .25rem 1.2rem; }
-.sec blockquote { border-left: 3px solid #22c55e; background: #dcfce7; margin: 6px 0; padding: 8px 12px; border-radius: 4px; font-weight: 600; font-style: normal; }
+.sec-chat      { background: #EFF6FF; border-left: 4px solid #3B82F6; }
+.sec-chat      .sec-title { color: #1E40AF; }
+.sec-korean    { background: #FAF5FF; border-left: 4px solid #A855F7; }
+.sec-korean    .sec-title { color: #6B21A8; }
+.sec p  { margin: .2rem 0; }
+.sec ul { margin: .2rem 0 .2rem 1.2rem; }
+.sec blockquote { border-left: 3px solid #22C55E; background: #DCFCE7; margin: 5px 0; padding: 7px 12px; border-radius: 4px; font-weight: 600; font-style: normal; }
 
 /* ── Typing ── */
-.typing span { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #bbb; margin: 0 2px; animation: blink 1.2s infinite; }
+.typing span { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); margin: 0 2px; animation: blink 1.2s infinite; }
 .typing span:nth-child(2) { animation-delay: .2s; }
 .typing span:nth-child(3) { animation-delay: .4s; }
-@keyframes blink { 0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)} }
+@keyframes blink { 0%,80%,100%{opacity:.2;transform:scale(.8)} 40%{opacity:1;transform:scale(1)} }
 
-/* ── Saving indicator ── */
-.save-toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,.7); color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 12px; pointer-events: none; opacity: 0; transition: opacity .3s; z-index: 50; }
+/* ── Input bar ── */
+#input-bar {
+  display: flex; align-items: flex-end; gap: 8px;
+  padding: 10px 14px 16px; background: var(--surface);
+  border-top: 1px solid var(--border); flex-shrink: 0;
+}
+#msg-input {
+  flex: 1; resize: none; max-height: 120px; overflow-y: auto;
+  border-radius: 22px; border: 1.5px solid var(--border);
+  background: var(--bg); padding: 10px 16px; font-size: 15px;
+  outline: none; font-family: inherit; line-height: 1.5; color: var(--text-1);
+  transition: border-color .15s, background .15s;
+}
+#msg-input:focus { border-color: var(--primary); background: white; }
+#msg-input::placeholder { color: var(--text-3); }
+#send-btn {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--primary); border: none; cursor: pointer;
+  color: white; font-size: 17px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background .15s, transform .1s;
+  box-shadow: 0 2px 8px rgba(37,99,235,.3);
+}
+#send-btn:hover { background: var(--primary-dark); }
+#send-btn:active { transform: scale(.93); }
+#send-btn:disabled { background: var(--border); box-shadow: none; cursor: default; }
+
+/* ── Toast ── */
+.save-toast {
+  position: fixed; bottom: 88px; left: 50%; transform: translateX(-50%);
+  background: #1A1D1E; color: white; padding: 8px 16px;
+  border-radius: 100px; font-size: 13px; font-weight: 500;
+  pointer-events: none; opacity: 0; transition: opacity .25s; z-index: 50; white-space: nowrap;
+}
 .save-toast.show { opacity: 1; }
 
-/* ── Input ── */
-#input-bar { display: flex; align-items: flex-end; gap: 8px; padding: 8px 10px 12px; background: var(--bg); flex-shrink: 0; }
-#msg-input { flex: 1; resize: none; max-height: 120px; overflow-y: auto; border-radius: 24px; border: none; background: #fff; padding: 10px 16px; font-size: 15px; outline: none; box-shadow: 0 1px 3px rgba(0,0,0,.1); font-family: inherit; line-height: 1.5; }
-#send-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--teal2); border: none; cursor: pointer; color: #fff; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .2s; }
-#send-btn:hover { background: var(--teal); }
-#send-btn:disabled { background: #aaa; cursor: default; }
-
-/* ── Drawer ── */
-#overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 99; }
+/* ── Overlay ── */
+#overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.4); z-index: 99; backdrop-filter: blur(2px);
+}
 #overlay.open { display: block; }
-#drawer { position: fixed; top: 0; right: -320px; width: 300px; height: 100%; background: var(--teal); color: #fff; padding: 20px 16px; transition: right .3s; z-index: 100; overflow-y: auto; box-shadow: -2px 0 12px rgba(0,0,0,.3); }
+
+/* ── Sidebar ── */
+#drawer {
+  position: fixed; top: 0; right: -360px; width: 340px; height: 100%;
+  background: var(--surface); z-index: 100;
+  transition: right .25s cubic-bezier(.4,0,.2,1);
+  display: flex; flex-direction: column;
+  box-shadow: -4px 0 24px rgba(0,0,0,.12);
+}
 #drawer.open { right: 0; }
-#drawer h2 { font-size: 15px; margin-bottom: 12px; }
-#drawer label { display: block; font-size: 12px; font-weight: 600; margin: 12px 0 4px; }
-#drawer select, #drawer textarea { width: 100%; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.12); color: #fff; padding: 8px 10px; font-size: 13px; }
-#drawer select option { color: #111; background: #fff; }
-.drawer-btn { width: 100%; margin-top: 10px; border: none; border-radius: 24px; color: #fff; font-size: 13px; font-weight: 700; padding: 10px; cursor: pointer; }
-.btn-new  { background: var(--green); }
-.btn-logout { background: rgba(255,255,255,.15); margin-top: 24px; }
-.close-btn { float: right; background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; }
+.drawer-header {
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.drawer-header h2 { font-size: 17px; font-weight: 700; color: var(--text-1); }
+.drawer-close {
+  width: 30px; height: 30px; border-radius: 8px; border: none;
+  background: var(--bg); font-size: 15px; cursor: pointer; color: var(--text-2);
+  display: flex; align-items: center; justify-content: center;
+}
+.drawer-close:hover { background: var(--border); }
+#drawer-content { flex: 1; overflow-y: auto; padding: 14px 16px; }
+.drawer-footer { padding: 12px 16px 20px; border-top: 1px solid var(--border); flex-shrink: 0; }
+.btn-logout {
+  width: 100%; padding: 12px; border-radius: 12px;
+  border: 1.5px solid var(--border); background: white;
+  color: var(--text-2); font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s;
+}
+.btn-logout:hover { background: #FEF2F2; border-color: #FCA5A5; color: #EF4444; }
+.empty-bm { text-align: center; padding: 48px 20px; color: var(--text-3); }
+.empty-bm .em-icon { font-size: 36px; margin-bottom: 12px; }
+.empty-bm p { font-size: 13px; line-height: 1.6; }
+.bm-item {
+  background: var(--bg); border-radius: 14px; padding: 14px 15px;
+  margin-bottom: 10px; border: 1px solid var(--border);
+}
+.bm-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 7px; }
+.bm-date { font-size: 11px; font-weight: 600; color: var(--text-3); }
+.bm-del { background: none; border: none; font-size: 14px; cursor: pointer; color: var(--text-3); padding: 0; line-height: 1; }
+.bm-del:hover { color: #EF4444; }
+.bm-original { font-size: 13px; color: var(--text-3); text-decoration: line-through; margin-bottom: 4px; }
+.bm-corrected { font-size: 14px; font-weight: 600; color: var(--green); margin-bottom: 6px; }
+.bm-reason { font-size: 12px; color: var(--text-2); line-height: 1.5; }
 
-/* ── Compare card ── */
-.compare-card { background: #f0f9ff; border: 1.5px solid #7dd3fc; border-radius: 10px; padding: 12px 14px; margin-top: 8px; cursor: pointer; transition: background .15s; }
-.compare-card:hover { background: #e0f2fe; }
-.compare-title { font-size: 12px; font-weight: 700; color: #0369a1; margin-bottom: 4px; }
-.compare-preview { font-size: 13px; color: #334155; font-style: italic; margin-bottom: 4px; }
-.compare-hint { font-size: 11px; color: #64748b; }
-
-/* ── Custom calendar ── */
-#cal-modal { display:none; position:fixed; inset:0; z-index:200; }
-#cal-modal.open { display:block; }
-#cal-backdrop { position:absolute; inset:0; background:rgba(0,0,0,.4); }
+/* ── Calendar ── */
+#cal-modal { display: none; position: fixed; inset: 0; z-index: 200; }
+#cal-modal.open { display: block; }
+#cal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.5); backdrop-filter: blur(2px); }
 #cal-box {
-  position:absolute; top:64px; left:50%; transform:translateX(-50%);
-  background:#fff; border-radius:16px; padding:16px;
-  width:300px; box-shadow:0 8px 32px rgba(0,0,0,.2);
+  position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
+  background: white; border-radius: 24px; padding: 20px; width: 320px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.2);
 }
-.cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-.cal-header span { font-weight:700; font-size:15px; }
-.cal-nav { background:none; border:none; font-size:18px; cursor:pointer; padding:4px 8px; border-radius:8px; }
-.cal-nav:hover { background:#f0f0f0; }
-.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
-.cal-dow { text-align:center; font-size:11px; font-weight:700; color:#888; padding:4px 0; }
+.cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.cal-header span { font-weight: 700; font-size: 15px; color: var(--text-1); }
+.cal-nav {
+  background: var(--bg); border: none; width: 32px; height: 32px;
+  border-radius: 9px; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.cal-nav:hover { background: var(--border); }
+.cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+.cal-dow { text-align: center; font-size: 11px; font-weight: 700; color: var(--text-3); padding: 4px 0; }
 .cal-day {
-  text-align:center; padding:7px 2px; border-radius:8px;
-  font-size:13px; cursor:pointer; border:none; background:none;
+  text-align: center; padding: 7px 0; border-radius: 10px;
+  font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: none;
+  transition: background .1s; color: var(--text-1);
 }
-.cal-day:hover { background:#e5f7ee; }
-.cal-day.today { background:var(--teal2); color:#fff; font-weight:700; }
-.cal-day.selected { border:2px solid var(--teal2); font-weight:700; color:var(--teal2); }
-.cal-day.other-month { color:#ccc; }
-.cal-day.has-record::after { content:'•'; display:block; font-size:8px; color:var(--green); margin-top:-4px; }
-
-/* ── Past date notice ── */
-.past-notice { text-align: center; background: #fef9c3; color: #854d0e; font-size: 12px; padding: 6px 12px; border-radius: 8px; margin: 4px 10px; flex-shrink: 0; }
+.cal-day:hover { background: var(--primary-light); color: var(--primary); }
+.cal-day.today { background: var(--primary); color: white; font-weight: 700; }
+.cal-day.selected { border: 2px solid var(--primary); color: var(--primary); font-weight: 700; }
+.cal-day.other-month { color: var(--text-3); }
+.cal-day.has-record::after { content: '·'; display: block; font-size: 8px; color: #22C55E; margin-top: -6px; }
 
 @media (max-width: 480px) {
   .bubble { max-width: 88%; }
   #drawer { width: 100%; right: -100%; }
+  .corrections-block { max-width: 92%; }
 }
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════ LOGIN ═══════════════════════════════ -->
+<!-- ══════════ LOGIN ══════════ -->
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">🎓</div>
@@ -184,37 +375,28 @@ header {
   </div>
 </div>
 
-<!-- ═══════════════════════════════  APP  ═══════════════════════════════ -->
+<!-- ══════════ APP ══════════ -->
 <div id="app">
-  <!-- Header -->
   <header>
-    <div class="h-avatar">🎓</div>
+    <div class="h-logo">🎓</div>
     <div class="h-info">
       <h1>AI English Tutor</h1>
       <div class="date-nav">
-        <button class="date-nav-btn" onclick="moveDate(-1)" title="전날">‹</button>
-        <button class="date-nav-label" onclick="openCal()">
-          📅 <span id="date-display">오늘</span>
-        </button>
-        <button class="date-nav-btn" onclick="moveDate(1)" title="다음날">›</button>
+        <button class="date-nav-btn" onclick="moveDate(-1)">‹</button>
+        <button class="date-nav-label" onclick="openCal()">📅 <span id="date-display">오늘</span></button>
+        <button class="date-nav-btn" onclick="moveDate(1)">›</button>
         <button class="date-nav-btn" onclick="handleDateChange(todayStr())" title="오늘">•</button>
       </div>
     </div>
-    <div class="h-right">
-      <span class="user-email" id="user-email"></span>
-      <button class="icon-btn" onclick="openDrawer()">☰</button>
+    <div class="h-actions">
+      <button class="icon-btn del" onclick="confirmReset()" title="대화 초기화">🗑️</button>
+      <button class="icon-btn" onclick="openDrawer()" title="북마크">🔖</button>
     </div>
   </header>
 
-  <!-- Past date notice (hidden by default) -->
-  <div id="past-notice" class="past-notice" style="display:none">
-    📖 과거 기록을 보고 있어요 — 계속 대화를 추가할 수 있어요
-  </div>
-
-  <!-- Chat -->
+  <div id="past-notice" style="display:none">📖 과거 기록 — 계속 대화를 추가할 수 있어요</div>
   <div id="chat"></div>
 
-  <!-- Input -->
   <div id="input-bar">
     <textarea id="msg-input" rows="1" placeholder="영어로 말해보세요! (한국어도 OK 👍)"
       oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
@@ -222,10 +404,9 @@ header {
   </div>
 </div>
 
-<!-- Save toast -->
-<div id="save-toast" class="save-toast">✓ 저장됨</div>
+<div id="save-toast" class="save-toast"></div>
 
-<!-- Custom Calendar Modal -->
+<!-- ══════════ CALENDAR ══════════ -->
 <div id="cal-modal">
   <div id="cal-backdrop" onclick="closeCal()"></div>
   <div id="cal-box">
@@ -243,72 +424,56 @@ header {
   </div>
 </div>
 
-<!-- Overlay + Drawer -->
+<!-- ══════════ OVERLAY + SIDEBAR ══════════ -->
 <div id="overlay" onclick="closeDrawer()"></div>
 <div id="drawer">
-  <button class="close-btn" onclick="closeDrawer()">✕</button>
-  <h2>⚙️ 설정</h2>
-  <label>📊 영어 레벨</label>
-  <select id="sel-level">
-    <option>Beginner</option><option>Elementary</option>
-    <option selected>Intermediate</option>
-    <option>Upper-Intermediate</option><option>Advanced</option>
-  </select>
-  <label>💡 관심사 / 주제</label>
-  <textarea id="txt-interests" rows="3" placeholder="예: K-pop, 여행, 음식, 영화…">daily life, travel, food</textarea>
-  <label>🤖 AI 모델</label>
-  <select id="sel-model">
-    <option value="gpt-4o-mini">gpt-4o-mini (빠름 · 저렴 ⚡)</option>
-    <option value="gpt-4o">gpt-4o (고품질 ✨)</option>
-  </select>
-  <button class="drawer-btn btn-new" onclick="newChat()">🔄 오늘 대화 초기화</button>
-  <button class="drawer-btn btn-logout" onclick="logout()">로그아웃</button>
+  <div class="drawer-header">
+    <h2>🔖 북마크</h2>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div id="drawer-content"></div>
+  <div class="drawer-footer">
+    <button class="btn-logout" onclick="logout()">로그아웃</button>
+  </div>
 </div>
 
-<!-- ═══════════════════════════════ SCRIPT ═══════════════════════════════ -->
+<!-- ══════════ SCRIPT ══════════ -->
 <script>
-// ── Supabase init ─────────────────────────────────────────────────────────
 const SUPA_URL = 'https://wswogpwncgxbvwhpewon.supabase.co';
 const SUPA_KEY = 'sb_publishable_dOHY8eklsJy3EQF-7YJuIA_9cKQRagw';
 const { createClient } = supabase;
 const sb = createClient(SUPA_URL, SUPA_KEY);
 
-// ── State ─────────────────────────────────────────────────────────────────
+// ── State ──────────────────────────────────────────────────────────────────
 let currentUser  = null;
-let currentDate  = todayStr();        // YYYY-MM-DD
-let messages     = [];                // current chat messages
-let questions    = [];                // loaded from questions.json
+let currentDate  = todayStr();
+let messages     = [];
+let questions    = {};
 let currentQuestion = '';
-let appInited    = false;             // guard: initApp runs only once
+let appInited    = false;
 
-// ── Auth ──────────────────────────────────────────────────────────────────
+// ── Auth ───────────────────────────────────────────────────────────────────
 async function loginWithGoogle() {
-  await sb.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.origin }
-  });
+  await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
 }
-
 async function logout() {
   await sb.auth.signOut();
   location.reload();
 }
 
-// ── Bootstrap ─────────────────────────────────────────────────────────────
 sb.auth.onAuthStateChange(async (event, session) => {
   if (session?.user) {
     currentUser = session.user;
-    document.getElementById('user-email').textContent = currentUser.email;
     if (!appInited) {
       appInited = true;
       document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('app').style.display         = 'flex';
+      document.getElementById('app').style.display = 'flex';
       await initApp();
     }
   } else {
     appInited = false;
     document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('app').style.display          = 'none';
+    document.getElementById('app').style.display = 'none';
   }
 });
 
@@ -317,137 +482,97 @@ async function initApp() {
   await loadDate(currentDate);
 }
 
-// ── Questions ─────────────────────────────────────────────────────────────
+// ── Questions ──────────────────────────────────────────────────────────────
 async function loadQuestions() {
-  try {
-    const r = await fetch('/questions.json');
-    return await r.json();   // { "MM-DD": "...", "_fallback": [...] }
-  } catch { return {}; }
+  try { const r = await fetch('/questions.json'); return await r.json(); }
+  catch { return {}; }
 }
 
 function getScheduledQuestion(dateStr, schedule) {
-  const mmdd = dateStr.slice(5);   // "YYYY-MM-DD" → "MM-DD"
+  const mmdd = dateStr.slice(5);
   if (schedule[mmdd]) return schedule[mmdd];
-
-  // fallback: sequential from _fallback array
   const fallback = schedule['_fallback'] || [];
   if (!fallback.length) return 'Tell me about your day!';
-
-  // use day-of-year as index so it's stable per date
   const d = new Date(dateStr + 'T00:00:00');
   const dayOfYear = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
   return fallback[dayOfYear % fallback.length];
 }
 
-// ── Date helpers ──────────────────────────────────────────────────────────
+// ── Date helpers ───────────────────────────────────────────────────────────
 function todayStr() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-
 function formatDateKR(str) {
   const d = new Date(str + 'T00:00:00');
-  const today = todayStr();
-  const label = str === today ? ' (오늘)' : '';
+  const label = str === todayStr() ? ' (오늘)' : '';
   return `${d.getMonth()+1}월 ${d.getDate()}일${label}`;
 }
-
-// Previous month's same day with 31-day special rule
 function getPrevMonthDate(dateStr) {
   const [y, m, d] = dateStr.split('-').map(Number);
-  const MONTHS_WITH_31 = [1,3,5,7,8,10,12];
-
+  const MONTHS31 = [1,3,5,7,8,10,12];
   if (d === 31) {
     let pm = m - 1, py = y;
     while (true) {
       if (pm < 1) { pm = 12; py--; }
-      if (MONTHS_WITH_31.includes(pm)) {
-        return `${py}-${String(pm).padStart(2,'0')}-31`;
-      }
+      if (MONTHS31.includes(pm)) return `${py}-${String(pm).padStart(2,'0')}-31`;
       pm--;
     }
-  } else {
-    let pm = m - 1, py = y;
-    if (pm < 1) { pm = 12; py--; }
-    return `${py}-${String(pm).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
   }
+  let pm = m - 1, py = y;
+  if (pm < 1) { pm = 12; py--; }
+  return `${py}-${String(pm).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
 
-// ── Supabase DB ───────────────────────────────────────────────────────────
+// ── Supabase DB ────────────────────────────────────────────────────────────
 function withTimeout(promise, ms = 5000) {
-  const t = new Promise((_, rej) => setTimeout(() => rej(new Error('DB 타임아웃')), ms));
-  return Promise.race([promise, t]);
+  return Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
 }
-
 async function getRecord(dateStr) {
   try {
     const { data, error } = await withTimeout(
-      sb.from('records').select('*')
-        .eq('user_id', currentUser.id)
-        .eq('date', dateStr)
-        .maybeSingle()
+      sb.from('records').select('*').eq('user_id', currentUser.id).eq('date', dateStr).maybeSingle()
     );
     if (error) { console.warn('getRecord:', error.message); return null; }
     return data;
-  } catch (e) {
-    console.warn('getRecord timeout/error:', e.message);
-    return null;
-  }
+  } catch (e) { return null; }
 }
-
 async function saveRecord(dateStr, question, msgs) {
   try {
-    await withTimeout(sb.from('records').upsert({
-      user_id:  currentUser.id,
-      date:     dateStr,
-      question: question,
-      messages: msgs,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id,date' }));
-  } catch (e) {
-    console.warn('saveRecord error:', e.message);
-  }
+    await withTimeout(sb.from('records').upsert(
+      { user_id: currentUser.id, date: dateStr, question, messages: msgs, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id,date' }
+    ));
+  } catch (e) { console.warn('saveRecord:', e.message); }
 }
 
-// ── Question logic ────────────────────────────────────────────────────────
-// 전월 없음                           → 새 질문
-// 전월 있음 + 전전월 없음              → 전월 동일
-// 전월 있음 + 전전월 있음 + 질문 다름  → 전월 동일 (아직 한 번만 반복)
-// 전월 있음 + 전전월 있음 + 질문 같음  → 새 질문   (두 달 연속 반복 → 넘어감)
+// ── Question logic ─────────────────────────────────────────────────────────
 async function determineQuestion(dateStr) {
-  const prev1Str = getPrevMonthDate(dateStr);
-  const prev2Str = getPrevMonthDate(prev1Str);
-
-  const rec1 = await getRecord(prev1Str);
-  const rec2 = await getRecord(prev2Str);
-
-  if (!rec1)                              return getScheduledQuestion(dateStr, questions);
-  if (!rec2)                              return rec1.question;
-  if (rec1.question !== rec2.question)    return rec1.question;
+  const p1 = getPrevMonthDate(dateStr);
+  const p2 = getPrevMonthDate(p1);
+  const r1 = await getRecord(p1);
+  const r2 = await getRecord(p2);
+  if (!r1)                           return getScheduledQuestion(dateStr, questions);
+  if (!r2)                           return r1.question;
+  if (r1.question !== r2.question)   return r1.question;
   return getScheduledQuestion(dateStr, questions);
 }
 
-// ── Load a date ───────────────────────────────────────────────────────────
+// ── Load date ──────────────────────────────────────────────────────────────
 async function loadDate(dateStr) {
   currentDate = dateStr;
-
   document.getElementById('date-display').textContent = formatDateKR(dateStr);
   document.getElementById('past-notice').style.display = dateStr < todayStr() ? 'block' : 'none';
-
   messages = [];
   const chat = document.getElementById('chat');
 
-  // 1단계: 질문 즉시 표시 (DB 없이 스케줄에서)
   currentQuestion = getScheduledQuestion(dateStr, questions);
   chat.innerHTML = '';
-  await showDailyQuestion(dateStr, currentQuestion);
+  showDailyQuestion(dateStr, currentQuestion);
 
-  // 2단계: DB에서 실제 데이터 로드 (백그라운드)
   try {
     const record = await getRecord(dateStr);
-
     if (record && record.messages?.length > 0) {
-      // 저장된 대화 있으면 복원
       currentQuestion = record.question;
       messages = record.messages;
       chat.innerHTML = '';
@@ -467,25 +592,23 @@ async function loadDate(dateStr) {
       }
     }
   } catch (err) {
-    console.warn('DB 로드 실패 (오프라인 모드로 진행):', err.message);
+    console.warn('DB load failed:', err.message);
   }
 }
 
-// ── Render helpers ────────────────────────────────────────────────────────
+// ── Render helpers ─────────────────────────────────────────────────────────
 function showDailyQuestion(dateStr, question) {
+  const chat = document.getElementById('chat');
   const d = new Date(dateStr + 'T00:00:00');
-  const dateLabel = `${d.getMonth()+1}월 ${d.getDate()}일`;
-
-  const html = `
-    <div class="sec sec-question">
-      <div class="sec-title">📅 ${dateLabel} 오늘의 주제</div>
-      <div class="q-text">${question.replace(/\n/g, '<br>')}</div>
-      <div class="q-sub">영어로 대답해봐! 틀려도 괜찮아 — 함께 고쳐나가요 😊</div>
-    </div>
+  const label = `${d.getMonth()+1}월 ${d.getDate()}일`;
+  const card = document.createElement('div');
+  card.className = 'q-card';
+  card.innerHTML = `
+    <div class="q-card-label">📅 ${label} 오늘의 주제</div>
+    <div class="q-card-text">${escHtml(question).replace(/\n/g,'<br>')}</div>
+    <div class="q-card-sub">영어로 대답해봐! 틀려도 괜찮아 — 함께 고쳐나가요 😊</div>
     <div id="compare-slot"></div>`;
-  appendBubble('bot', html, true);
-
-  // 비교 카드는 DB에서 백그라운드로 로드
+  chat.appendChild(card);
   loadCompareCard(dateStr);
 }
 
@@ -494,14 +617,10 @@ async function loadCompareCard(dateStr) {
     const prevStr = getPrevMonthDate(dateStr);
     const prevRec = await getRecord(prevStr);
     if (!prevRec?.messages?.length) return;
-
     const prevD = new Date(prevStr + 'T00:00:00');
     const prevLabel = `${prevD.getMonth()+1}월 ${prevD.getDate()}일`;
-    const firstUserMsg = prevRec.messages.find(m => m.role === 'user');
-    const preview = firstUserMsg
-      ? `"${firstUserMsg.content.slice(0, 80)}${firstUserMsg.content.length > 80 ? '…' : ''}"`
-      : '(기록 있음)';
-
+    const firstUser = prevRec.messages.find(m => m.role === 'user');
+    const preview = firstUser ? `"${firstUser.content.slice(0,80)}${firstUser.content.length>80?'…':''}"` : '(기록 있음)';
     const slot = document.getElementById('compare-slot');
     if (slot) slot.innerHTML = `
       <div class="compare-card" onclick="loadDate('${prevStr}')">
@@ -509,7 +628,7 @@ async function loadCompareCard(dateStr) {
         <div class="compare-preview">${preview}</div>
         <div class="compare-hint">탭해서 전월 기록 확인 →</div>
       </div>`;
-  } catch (e) { /* 비교카드 실패해도 무시 */ }
+  } catch(e) {}
 }
 
 function renderAllMessages() {
@@ -517,198 +636,352 @@ function renderAllMessages() {
   chat.innerHTML = '';
   showDailyQuestion(currentDate, currentQuestion);
   for (const msg of messages) {
-    if (msg.role === 'user') appendBubble('user', msg.content, false);
-    else                     appendBubble('bot', renderAI(msg.content), true);
+    if (msg.role === 'user') appendBubble('user', msg.content);
+    else renderAIResponse(msg.content);
   }
 }
 
-function appendBubble(role, content, isHtml) {
+function appendBubble(role, content, isHtml = false) {
   const chat = document.getElementById('chat');
-  const row  = document.createElement('div');
-  row.className = `bubble-row ${role === 'user' ? 'user' : 'bot'}`;
-
+  const row = document.createElement('div');
+  row.className = `bubble-row ${role === 'user' ? 'right' : 'left'}`;
   if (role !== 'user') {
     const ava = document.createElement('div');
     ava.className = 'b-ava'; ava.textContent = '🎓';
     row.appendChild(ava);
   }
-
   const bubble = document.createElement('div');
   bubble.className = `bubble ${role === 'user' ? 'user' : 'bot'}`;
-  if (isHtml) bubble.innerHTML = content;
-  else        bubble.textContent = content;
-
+  if (isHtml) bubble.innerHTML = content; else bubble.textContent = content;
   row.appendChild(bubble);
   chat.appendChild(row);
   chat.scrollTop = chat.scrollHeight;
   return bubble;
 }
 
+// ── AI response parsing & rendering ───────────────────────────────────────
+function parseAIResponse(content) {
+  // Korean mode
+  const koM = content.match(/##\s*🌏[^\n]*\n([\s\S]+)$/i);
+  if (koM) return { type: 'korean', text: koM[1].trim() };
+
+  // New format
+  if (/##\s*💯/.test(content)) {
+    const correctedM = content.match(/##\s*💯[^\n]*\n([\s\S]+?)(?=##\s*[✏💬]|$)/);
+    const correctionsM = content.match(/##\s*✏️?[^\n]*\n([\s\S]+?)(?=##\s*💬|$)/);
+    const chatM = content.match(/##\s*💬[^\n]*\n([\s\S]+?)$/);
+
+    const items = [];
+    if (correctionsM) {
+      const lines = correctionsM[1].split('\n');
+      for (const line of lines) {
+        if (!line.trim().startsWith('ITEM::')) continue;
+        const parts = line.replace(/^ITEM::/, '').split('::');
+        if (parts.length >= 3) {
+          items.push({
+            original: parts[0].trim(),
+            corrected: parts[1].trim(),
+            reason: parts.slice(2).join('::').trim()
+          });
+        }
+      }
+    }
+    return {
+      type: 'new',
+      corrected: correctedM ? correctedM[1].trim() : null,
+      items,
+      chat: chatM ? chatM[1].trim() : null
+    };
+  }
+
+  // Old format
+  return { type: 'old', content };
+}
+
+function renderAIResponse(content) {
+  const chat = document.getElementById('chat');
+  const parsed = parseAIResponse(content);
+
+  if (parsed.type === 'korean') {
+    const row = document.createElement('div');
+    row.className = 'bubble-row left';
+    const ava = document.createElement('div');
+    ava.className = 'b-ava'; ava.textContent = '🎓';
+    const bub = document.createElement('div');
+    bub.className = 'ko-bubble';
+    bub.innerHTML = marked.parse(parsed.text);
+    row.appendChild(ava); row.appendChild(bub);
+    chat.appendChild(row);
+    chat.scrollTop = chat.scrollHeight;
+    return;
+  }
+
+  if (parsed.type === 'old') {
+    appendBubble('bot', renderAIOld(parsed.content), true);
+    return;
+  }
+
+  // ── New format ──
+  // 1. Full corrected sentence (right-aligned green bubble)
+  if (parsed.corrected && parsed.corrected.toUpperCase() !== 'NONE') {
+    const row = document.createElement('div');
+    row.className = 'bubble-row right';
+    const bub = document.createElement('div');
+    bub.className = 'bubble corrected';
+    bub.textContent = parsed.corrected;
+    row.appendChild(bub);
+    chat.appendChild(row);
+  }
+
+  // 2. Correction items (right-aligned block)
+  if (parsed.items.length > 0) {
+    const block = document.createElement('div');
+    block.className = 'corrections-block';
+    for (const item of parsed.items) {
+      block.appendChild(createCorrectionItem(item));
+    }
+    chat.appendChild(block);
+  }
+
+  // 3. Continue chat (left-aligned bot bubble)
+  if (parsed.chat) {
+    appendBubble('bot', parsed.chat);
+  }
+
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function createCorrectionItem(item) {
+  const div = document.createElement('div');
+  div.className = 'correction-item';
+
+  const origRow = document.createElement('div');
+  origRow.className = 'ci-original';
+  origRow.innerHTML = `<span class="ci-mark">❌</span><span>${escHtml(item.original)}</span>`;
+
+  const corrRow = document.createElement('div');
+  corrRow.className = 'ci-corrected-row';
+
+  const corrText = document.createElement('div');
+  corrText.className = 'ci-corrected-text';
+  corrText.innerHTML = `<span class="ci-mark">✅</span><span>${escHtml(item.corrected)}</span>`;
+
+  const bmBtn = document.createElement('button');
+  bmBtn.className = 'bookmark-btn';
+  bmBtn.textContent = '🔖';
+  bmBtn.title = '북마크';
+  // Check if already bookmarked
+  const bms = getBookmarks();
+  if (bms.some(b => b.original === item.original && b.corrected === item.corrected)) {
+    bmBtn.classList.add('saved');
+  }
+  bmBtn.addEventListener('click', () => toggleBookmark(bmBtn, item));
+
+  corrRow.appendChild(corrText);
+  corrRow.appendChild(bmBtn);
+
+  const reasonDiv = document.createElement('div');
+  reasonDiv.className = 'ci-reason';
+  reasonDiv.textContent = item.reason;
+
+  div.appendChild(origRow);
+  div.appendChild(corrRow);
+  div.appendChild(reasonDiv);
+  return div;
+}
+
+// Old format renderer (backwards compatibility)
+function renderAIOld(content) {
+  const koRe = /##\s*🌏[^\n]*\n([\s\S]*?)$/i;
+  const koM = content.match(koRe);
+  if (koM) return `<div class="sec sec-korean"><div class="sec-title">🌏 영어로 이렇게 말해요!</div>${marked.parse(koM[1].trim())}</div>`;
+  const s1 = content.match(/##\s*✏️?\s*Step\s*1[^\n]*\n([\s\S]*?)(?=##\s*💯?\s*Step\s*2|$)/i);
+  const s2 = content.match(/##\s*💯?\s*Step\s*2[^\n]*\n([\s\S]*?)(?=##\s*💬?\s*Step\s*3|$)/i);
+  const s3 = content.match(/##\s*💬?\s*Step\s*3[^\n]*([\s\S]*?)$/i);
+  if (s1 && s2 && s3) return `
+    <div class="sec sec-feedback"><div class="sec-title">✏️ 문장 교정 &amp; 피드백</div>${marked.parse(s1[1].trim())}</div>
+    <div class="sec sec-corrected"><div class="sec-title">💯 교정된 전체 문장</div>${marked.parse(s2[1].trim())}</div>
+    <div class="sec sec-chat"><div class="sec-title">💬 대화 이어가기</div>${marked.parse(s3[1].trim())}</div>`;
+  return marked.parse(content);
+}
+
+// ── Bookmarks ──────────────────────────────────────────────────────────────
+function bmKey() { return `bm_${currentUser?.id || 'guest'}`; }
+function getBookmarks() {
+  try { return JSON.parse(localStorage.getItem(bmKey()) || '[]'); } catch { return []; }
+}
+function toggleBookmark(btn, item) {
+  const bms = getBookmarks();
+  const idx = bms.findIndex(b => b.original === item.original && b.corrected === item.corrected);
+  if (idx >= 0) {
+    bms.splice(idx, 1);
+    btn.classList.remove('saved');
+    showToast('북마크 삭제됨');
+  } else {
+    bms.unshift({ id: Date.now(), original: item.original, corrected: item.corrected, reason: item.reason, date: currentDate });
+    btn.classList.add('saved');
+    showToast('🔖 북마크에 저장됐어요');
+  }
+  localStorage.setItem(bmKey(), JSON.stringify(bms));
+  renderBookmarks();
+}
+function removeBookmark(id) {
+  const bms = getBookmarks().filter(b => b.id !== id);
+  localStorage.setItem(bmKey(), JSON.stringify(bms));
+  renderBookmarks();
+}
+function renderBookmarks() {
+  const el = document.getElementById('drawer-content');
+  const bms = getBookmarks();
+  if (!bms.length) {
+    el.innerHTML = `<div class="empty-bm"><div class="em-icon">🔖</div><p>저장된 북마크가 없어요.<br/>교정 항목의 🔖을 눌러<br/>저장해보세요!</p></div>`;
+    return;
+  }
+  el.innerHTML = bms.map(b => `
+    <div class="bm-item">
+      <div class="bm-top">
+        <span class="bm-date">${b.date}</span>
+        <button class="bm-del" onclick="removeBookmark(${b.id})">✕</button>
+      </div>
+      <div class="bm-original">${escHtml(b.original)}</div>
+      <div class="bm-corrected">✅ ${escHtml(b.corrected)}</div>
+      <div class="bm-reason">${escHtml(b.reason)}</div>
+    </div>`).join('');
+}
+
+// ── Send message ───────────────────────────────────────────────────────────
+async function sendMessage() {
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+  input.value = ''; input.style.height = 'auto';
+
+  appendBubble('user', text);
+  messages.push({ role: 'user', content: text });
+
+  const MAX = 40;
+  const win = messages.length > MAX ? messages.slice(-MAX) : messages;
+
+  showTyping();
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: win }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    hideTyping();
+    renderAIResponse(data.reply);
+    messages.push({ role: 'assistant', content: data.reply });
+    await saveRecord(currentDate, currentQuestion, messages);
+    showToast('✓ 저장됨');
+  } catch (err) {
+    hideTyping();
+    appendBubble('bot', `⚠️ 오류: ${err.message}`);
+  }
+  btn.disabled = false;
+  input.focus();
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg = '✓ 저장됨') {
+  const t = document.getElementById('save-toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ── Typing indicator ───────────────────────────────────────────────────────
 let typingRow = null;
 function showTyping() {
   const chat = document.getElementById('chat');
   typingRow = document.createElement('div');
-  typingRow.className = 'bubble-row bot';
+  typingRow.className = 'bubble-row left';
   typingRow.innerHTML = `<div class="b-ava">🎓</div><div class="bubble bot typing"><span></span><span></span><span></span></div>`;
   chat.appendChild(typingRow);
   chat.scrollTop = chat.scrollHeight;
 }
 function hideTyping() { if (typingRow) { typingRow.remove(); typingRow = null; } }
 
-// ── AI response renderer ──────────────────────────────────────────────────
-function renderAI(content) {
-  const koRe = /##\s*🌏[^\n]*\n([\s\S]*?)$/i;
-  const koM  = content.match(koRe);
-  if (koM) return `<div class="sec sec-korean"><div class="sec-title">🌏 영어로 이렇게 말해요!</div>${marked.parse(koM[1].trim())}</div>`;
-
-  const s1 = content.match(/##\s*✏️?\s*Step\s*1[^\n]*\n([\s\S]*?)(?=##\s*💯?\s*Step\s*2|$)/i);
-  const s2 = content.match(/##\s*💯?\s*Step\s*2[^\n]*\n([\s\S]*?)(?=##\s*💬?\s*Step\s*3|$)/i);
-  const s3 = content.match(/##\s*💬?\s*Step\s*3[^\n]*([\s\S]*?)$/i);
-
-  if (s1 && s2 && s3) return `
-    <div class="sec sec-feedback"><div class="sec-title">✏️ 문장 교정 &amp; 피드백</div>${marked.parse(s1[1].trim())}</div>
-    <div class="sec sec-corrected"><div class="sec-title">💯 교정된 전체 문장</div>${marked.parse(s2[1].trim())}</div>
-    <div class="sec sec-chat"><div class="sec-title">💬 대화 이어가기</div>${marked.parse(s3[1].trim())}</div>`;
-
-  return marked.parse(content);
-}
-
-// ── Send message ──────────────────────────────────────────────────────────
-async function sendMessage() {
-  const input = document.getElementById('msg-input');
-  const text  = input.value.trim();
-  if (!text) return;
-
-  const btn = document.getElementById('send-btn');
-  btn.disabled = true;
-  input.value  = ''; input.style.height = 'auto';
-
-  appendBubble('user', text, false);
-  messages.push({ role: 'user', content: text });
-
-  const level     = document.getElementById('sel-level').value;
-  const interests = document.getElementById('txt-interests').value || 'general';
-  const model     = document.getElementById('sel-model').value;
-
-  // Sliding window: last 40 messages (20 turns)
-  const MAX = 40;
-  const window = messages.length > MAX ? messages.slice(-MAX) : messages;
-
-  showTyping();
-  try {
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: window, level, interests, model }),
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-
-    hideTyping();
-    appendBubble('bot', renderAI(data.reply), true);
-    messages.push({ role: 'assistant', content: data.reply });
-
-    // Auto-save to Supabase
-    await saveRecord(currentDate, currentQuestion, messages);
-    showToast();
-
-  } catch (err) {
-    hideTyping();
-    appendBubble('bot', `⚠️ 오류: ${err.message}`, false);
-  }
-  btn.disabled = false;
-  input.focus();
-}
-
-// ── Save toast ────────────────────────────────────────────────────────────
-function showToast() {
-  const t = document.getElementById('save-toast');
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 1500);
-}
-
-// ── Date change ───────────────────────────────────────────────────────────
-// ── Custom Calendar ───────────────────────────────────────────────────────
-let calYear, calMonth;
-
-function openCal() {
-  const d = new Date(currentDate + 'T00:00:00');
-  calYear  = d.getFullYear();
-  calMonth = d.getMonth();
-  renderCal();
-  document.getElementById('cal-modal').classList.add('open');
-}
-function closeCal() {
-  document.getElementById('cal-modal').classList.remove('open');
-}
-function calMove(dir) {
-  calMonth += dir;
-  if (calMonth < 0)  { calMonth = 11; calYear--; }
-  if (calMonth > 11) { calMonth = 0;  calYear++; }
-  renderCal();
-}
-function renderCal() {
-  const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  document.getElementById('cal-title').textContent = `${calYear}년 ${months[calMonth]}`;
-
-  const today    = todayStr();
-  const firstDay = new Date(calYear, calMonth, 1).getDay();
-  const lastDate = new Date(calYear, calMonth + 1, 0).getDate();
-  const prevLast = new Date(calYear, calMonth, 0).getDate();
-
-  let html = '';
-  // 이전 달 날짜
-  for (let i = firstDay - 1; i >= 0; i--) {
-    html += `<button class="cal-day other-month" disabled>${prevLast - i}</button>`;
-  }
-  // 이번 달
-  for (let d = 1; d <= lastDate; d++) {
-    const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    let cls = 'cal-day';
-    if (ds === today)        cls += ' today';
-    if (ds === currentDate)  cls += ' selected';
-    html += `<button class="${cls}" onclick="pickDate('${ds}')">${d}</button>`;
-  }
-  // 다음 달 채우기
-  const remaining = 7 - ((firstDay + lastDate) % 7 || 7);
-  if (remaining < 7) {
-    for (let d = 1; d <= remaining; d++) {
-      html += `<button class="cal-day other-month" disabled>${d}</button>`;
-    }
-  }
-  document.getElementById('cal-days').innerHTML = html;
-}
-function pickDate(ds) {
-  closeCal();
-  handleDateChange(ds);
-}
-
+// ── Date change ────────────────────────────────────────────────────────────
 function moveDate(days) {
   const d = new Date(currentDate + 'T00:00:00');
   d.setDate(d.getDate() + days);
-  const next = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  handleDateChange(next);
+  handleDateChange(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
 }
-
 async function handleDateChange(val) {
   if (!val || val === currentDate) return;
   await loadDate(val);
   closeDrawer();
 }
 
-// ── New chat ──────────────────────────────────────────────────────────────
-async function newChat() {
-  if (!confirm('오늘 대화를 초기화할까요?')) return;
+// ── Reset chat ─────────────────────────────────────────────────────────────
+async function confirmReset() {
+  if (!confirm(`${formatDateKR(currentDate)} 대화를 초기화할까요?`)) return;
   await sb.from('records').delete().eq('user_id', currentUser.id).eq('date', currentDate);
   await loadDate(currentDate);
-  closeDrawer();
 }
 
-// ── UI helpers ────────────────────────────────────────────────────────────
+// ── Calendar ───────────────────────────────────────────────────────────────
+let calYear, calMonth;
+function openCal() {
+  const d = new Date(currentDate + 'T00:00:00');
+  calYear = d.getFullYear(); calMonth = d.getMonth();
+  renderCal();
+  document.getElementById('cal-modal').classList.add('open');
+}
+function closeCal() { document.getElementById('cal-modal').classList.remove('open'); }
+function calMove(dir) {
+  calMonth += dir;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCal();
+}
+function renderCal() {
+  const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  document.getElementById('cal-title').textContent = `${calYear}년 ${months[calMonth]}`;
+  const today = todayStr();
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const lastDate = new Date(calYear, calMonth + 1, 0).getDate();
+  const prevLast = new Date(calYear, calMonth, 0).getDate();
+  let html = '';
+  for (let i = firstDay - 1; i >= 0; i--)
+    html += `<button class="cal-day other-month" disabled>${prevLast - i}</button>`;
+  for (let d = 1; d <= lastDate; d++) {
+    const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    let cls = 'cal-day';
+    if (ds === today) cls += ' today';
+    if (ds === currentDate) cls += ' selected';
+    html += `<button class="${cls}" onclick="pickDate('${ds}')">${d}</button>`;
+  }
+  const rem = 7 - ((firstDay + lastDate) % 7 || 7);
+  if (rem < 7) for (let d = 1; d <= rem; d++)
+    html += `<button class="cal-day other-month" disabled>${d}</button>`;
+  document.getElementById('cal-days').innerHTML = html;
+}
+function pickDate(ds) { closeCal(); handleDateChange(ds); }
+
+// ── Drawer ────────────────────────────────────────────────────────────────
+function openDrawer() {
+  renderBookmarks();
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
 function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
-function openDrawer()  { document.getElementById('drawer').classList.add('open'); document.getElementById('overlay').classList.add('open'); }
-function closeDrawer() { document.getElementById('drawer').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
 </script>
 </body>
 </html>
