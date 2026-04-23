@@ -180,8 +180,7 @@ header {
 }
 .ci-original {
   display: flex; align-items: flex-start; gap: 6px;
-  font-size: 14px; color: var(--text-3);
-  text-decoration: line-through; margin-bottom: 6px;
+  font-size: 14px; color: var(--text-1); margin-bottom: 6px;
 }
 .ci-corrected-row {
   display: flex; align-items: flex-start; justify-content: space-between;
@@ -189,8 +188,10 @@ header {
 }
 .ci-corrected-text {
   display: flex; align-items: flex-start; gap: 6px;
-  font-size: 14px; font-weight: 600; color: var(--green);
+  font-size: 14px; font-weight: 500; color: var(--text-1);
 }
+.diff-removed { color: #DC2626; font-weight: 600; }
+.diff-added   { color: #16A34A; font-weight: 600; }
 .ci-mark { font-size: 13px; flex-shrink: 0; line-height: 1.6; }
 .ci-reason {
   font-size: 13px; color: var(--text-2); line-height: 1.55;
@@ -778,20 +779,63 @@ function renderAIResponse(content) {
   chat.scrollTop = chat.scrollHeight;
 }
 
+// ── Word-level diff (LCS) ─────────────────────────────────────────────────
+function tokenize(s) {
+  return String(s).split(/(\s+)/).filter(t => t !== '');
+}
+function hasKorean(t) {
+  return /[\u3130-\u318F\uAC00-\uD7AF\u1100-\u11FF]/.test(t);
+}
+function diffTokens(aStr, bStr) {
+  const a = tokenize(aStr), b = tokenize(bStr);
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m + 1}, () => new Int32Array(n + 1));
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] + 1 : Math.max(dp[i-1][j], dp[i][j-1]);
+  const aOut = [], bOut = [];
+  let i = m, j = n;
+  while (i > 0 && j > 0) {
+    if (a[i-1] === b[j-1]) {
+      aOut.unshift({ text: a[i-1], changed: false });
+      bOut.unshift({ text: b[j-1], changed: false });
+      i--; j--;
+    } else if (dp[i-1][j] >= dp[i][j-1]) {
+      aOut.unshift({ text: a[i-1], changed: true }); i--;
+    } else {
+      bOut.unshift({ text: b[j-1], changed: true }); j--;
+    }
+  }
+  while (i > 0) { aOut.unshift({ text: a[i-1], changed: true }); i--; }
+  while (j > 0) { bOut.unshift({ text: b[j-1], changed: true }); j--; }
+  return { a: aOut, b: bOut };
+}
+function renderDiff(tokens, color) {
+  return tokens.map(tok => {
+    if (/^\s+$/.test(tok.text)) return tok.text;
+    if (!tok.changed) return escHtml(tok.text);
+    if (hasKorean(tok.text)) return escHtml(tok.text);
+    const cls = color === 'red' ? 'diff-removed' : 'diff-added';
+    return `<span class="${cls}">${escHtml(tok.text)}</span>`;
+  }).join('');
+}
+
 function createCorrectionItem(item) {
   const div = document.createElement('div');
   div.className = 'correction-item';
 
+  const diff = diffTokens(item.original, item.corrected);
+
   const origRow = document.createElement('div');
   origRow.className = 'ci-original';
-  origRow.innerHTML = `<span class="ci-mark">❌</span><span>${escHtml(item.original)}</span>`;
+  origRow.innerHTML = `<span class="ci-mark">❌</span><span>${renderDiff(diff.a, 'red')}</span>`;
 
   const corrRow = document.createElement('div');
   corrRow.className = 'ci-corrected-row';
 
   const corrText = document.createElement('div');
   corrText.className = 'ci-corrected-text';
-  corrText.innerHTML = `<span class="ci-mark">✅</span><span>${escHtml(item.corrected)}</span>`;
+  corrText.innerHTML = `<span class="ci-mark">✅</span><span>${renderDiff(diff.b, 'green')}</span>`;
 
   const bmBtn = document.createElement('button');
   bmBtn.className = 'bookmark-btn';
