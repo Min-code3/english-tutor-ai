@@ -199,11 +199,20 @@ header {
 }
 .bookmark-btn {
   background: none; border: none; cursor: pointer;
-  font-size: 15px; padding: 3px 5px; border-radius: 7px;
-  transition: background .15s; color: var(--text-3); flex-shrink: 0;
+  padding: 4px 6px; border-radius: 8px;
+  color: var(--text-3); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
 }
-.bookmark-btn:hover { background: #FFFBEB; color: #D97706; }
-.bookmark-btn.saved { color: #D97706; }
+.bookmark-btn svg { display: block; width: 14px; height: 18px; }
+.bookmark-btn svg path {
+  fill: transparent; stroke: currentColor;
+  stroke-width: 1.6; stroke-linejoin: round;
+  transition: fill .15s, stroke .15s;
+}
+.bookmark-btn:hover { background: var(--green-bg); color: var(--green); }
+.bookmark-btn.saved { color: var(--green); }
+.bookmark-btn.saved svg path { fill: var(--green); }
 
 /* ── Per-message delete ── */
 .turn-del {
@@ -839,7 +848,7 @@ function createCorrectionItem(item) {
 
   const bmBtn = document.createElement('button');
   bmBtn.className = 'bookmark-btn';
-  bmBtn.textContent = '🔖';
+  bmBtn.innerHTML = '<svg viewBox="0 0 16 20"><path d="M2 1 L14 1 L14 19 L8 14 L2 19 Z"/></svg>';
   bmBtn.title = '북마크';
   // Check if already bookmarked
   const bms = getBookmarks();
