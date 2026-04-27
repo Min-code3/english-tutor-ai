@@ -135,6 +135,7 @@ header {
   box-shadow: var(--shadow-sm);
   margin-bottom: 8px; text-align: center;
 }
+.q-card-prompt { font-size: 14px; color: var(--text-2); font-weight: 500; line-height: 1.5; margin-bottom: 12px; }
 .q-card-text { font-size: 19px; font-weight: 800; color: var(--text-1); line-height: 1.55; }
 
 /* ── Compare card ── */
@@ -640,6 +641,7 @@ function showDailyQuestion(dateStr, question) {
   const card = document.createElement('div');
   card.className = 'q-card';
   card.innerHTML = `
+    <div class="q-card-prompt">Tell me anything! But if you don't know what to say, then you can answer this question:</div>
     <div class="q-card-text">${escHtml(question).replace(/\n/g,'<br>')}</div>
     <div id="compare-slot"></div>`;
   chat.appendChild(card);
